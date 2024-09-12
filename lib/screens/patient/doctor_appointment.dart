@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
 class DoctorAppointmentScreen extends StatefulWidget {
+  const DoctorAppointmentScreen({super.key});
+
   @override
   State<DoctorAppointmentScreen> createState() =>
       _DoctorAppointmentScreenState();
@@ -203,6 +205,12 @@ class _DoctorAppointmentScreenState extends State<DoctorAppointmentScreen> {
           _selectedDateIndex = index;
         });
       },
+      style: OutlinedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        side:
+            BorderSide(color: isSelected ? customBlue : Colors.grey, width: 2),
+        backgroundColor: isSelected ? customLightBlue : Colors.transparent,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -217,12 +225,6 @@ class _DoctorAppointmentScreenState extends State<DoctorAppointmentScreen> {
           ),
         ],
       ),
-      style: OutlinedButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        side:
-            BorderSide(color: isSelected ? customBlue : Colors.grey, width: 2),
-        backgroundColor: isSelected ? customLightBlue : Colors.transparent,
-      ),
     );
   }
 
@@ -233,16 +235,16 @@ class _DoctorAppointmentScreenState extends State<DoctorAppointmentScreen> {
           _selectedTimeIndex = _generateTimeSlots().indexOf(time);
         });
       },
-      child: Text(
-        time,
-        style: TextStyle(
-            fontSize: 16, color: isSelected ? customBlue : Colors.black),
-      ),
       style: OutlinedButton.styleFrom(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         side:
             BorderSide(color: isSelected ? customBlue : Colors.grey, width: 2),
         backgroundColor: isSelected ? customLightBlue : Colors.transparent,
+      ),
+      child: Text(
+        time,
+        style: TextStyle(
+            fontSize: 16, color: isSelected ? customBlue : Colors.black),
       ),
     );
   }

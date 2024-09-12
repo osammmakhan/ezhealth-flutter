@@ -5,6 +5,8 @@ import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
 
 class AdminSignInPage extends StatefulWidget {
+  const AdminSignInPage({super.key});
+
   @override
   _AdminSignInPageState createState() => _AdminSignInPageState();
 }
@@ -28,7 +30,7 @@ class _AdminSignInPageState extends State<AdminSignInPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
+                const Text(
                   'Admin Sign In',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -36,14 +38,14 @@ class _AdminSignInPageState extends State<AdminSignInPage> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                Text(
+                const Text(
                   'Welcome Back, Admin',
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
                 TextFormField(
                   controller: _emailController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Email Address',
                     prefixIcon: Icon(Icons.email),
                   ),
@@ -60,7 +62,7 @@ class _AdminSignInPageState extends State<AdminSignInPage> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
+                    prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
@@ -92,13 +94,13 @@ class _AdminSignInPageState extends State<AdminSignInPage> {
                         });
                       },
                     ),
-                    Text('Remember password'),
-                    Spacer(),
+                    const Text('Remember password'),
+                    const Spacer(),
                     TextButton(
                       onPressed: () {
                         // TODO: Implement forgot password functionality
                       },
-                      child: Text('Forget password'),
+                      child: const Text('Forget password'),
                     ),
                   ],
                 ),
@@ -115,7 +117,7 @@ class _AdminSignInPageState extends State<AdminSignInPage> {
                       MaterialPageRoute(builder: (_) => AdminSignUpScreen()),
                     );
                   },
-                  child: Text('Don\'t have an account? Sign Up'),
+                  child: const Text('Don\'t have an account? Sign Up'),
                 ),
               ],
             ),

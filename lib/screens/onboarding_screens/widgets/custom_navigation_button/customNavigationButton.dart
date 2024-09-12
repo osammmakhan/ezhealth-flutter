@@ -7,11 +7,11 @@ class CustomNavigationButton extends StatelessWidget {
   final VoidCallback? onPressed;
 
   const CustomNavigationButton({
-    Key? key,
+    super.key,
     required this.icon,
     required this.isFilled,
     required this.onPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class CustomNavigationButton extends StatelessWidget {
         shape: const CircleBorder(),
         padding: const EdgeInsets.all(20),
         backgroundColor: isFilled ? customBlue : Colors.white,
-        side: BorderSide(
+        side: const BorderSide(
           color: customBlue,
           width: 2,
         ),

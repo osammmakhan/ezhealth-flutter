@@ -4,6 +4,8 @@ import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
 import 'package:flutter/material.dart';
 
 class AppointmentDetailsScreen extends StatefulWidget {
+  const AppointmentDetailsScreen({super.key});
+
   @override
   _AppointmentDetailsScreenState createState() =>
       _AppointmentDetailsScreenState();
@@ -22,10 +24,10 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
+        title: const Text(
           'Appointment Details',
           style: TextStyle(color: Colors.white),
         ),
@@ -35,17 +37,17 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Center(
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: 300),
+                constraints: const BoxConstraints(maxWidth: 300),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Booking for',
+                    const Text('Booking for',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     _buildDropdown(
                         'Select Here', ['Myself', 'Others'], bookingFor,
                         (value) {
@@ -55,45 +57,45 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
                       });
                     }),
                     if (showOtherPersonName) ...[
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       TextField(
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Name of the other person',
                           border: OutlineInputBorder(),
                         ),
                         onChanged: (value) => otherPersonName = value,
                       ),
                     ],
-                    SizedBox(height: 16),
-                    Text('Gender',
+                    const SizedBox(height: 16),
+                    const Text('Gender',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     _buildDropdown(
                         'Select Here', ['Male', 'Female', 'Others'], gender,
                         (value) {
                       setState(() => gender = value);
                     }),
-                    SizedBox(height: 16),
-                    Text('Age',
+                    const SizedBox(height: 16),
+                    const Text('Age',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     _buildAgeSlider(),
-                    SizedBox(height: 16),
-                    Text('Write Your Problem',
+                    const SizedBox(height: 16),
+                    const Text('Write Your Problem',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     TextField(
                       maxLines: 4,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         hintText: 'Describe your problem here...',
                       ),
                       onChanged: (value) => problem = value,
                     ),
-                    SizedBox(height: 100), // Space for the button at the bottom
+                    const SizedBox(height: 100), // Space for the button at the bottom
                   ],
                 ),
               ),
@@ -110,8 +112,9 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
                   // Handle the appointment creation here
                   print('Appointment details:');
                   print('Booking for: $bookingFor');
-                  if (showOtherPersonName)
+                  if (showOtherPersonName) {
                     print('Other person name: $otherPersonName');
+                  }
                   print('Gender: $gender');
                   print('Age: ${age.toInt()}');
                   print('Problem: $problem');
@@ -135,7 +138,7 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
         child: DropdownButton<String>(
           isExpanded: true,
           hint: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Text(hint),
           ),
           value: value,
@@ -159,7 +162,7 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
       children: [
         Text(
           '${age.toInt()}',
-          style: TextStyle(
+          style: const TextStyle(
               fontSize: 40, fontWeight: FontWeight.bold, color: customBlue),
         ),
         SliderTheme(
@@ -168,8 +171,8 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
             inactiveTrackColor: customBlue.withOpacity(0.3),
             thumbColor: Colors.white,
             overlayColor: Colors.blue.withOpacity(0.4),
-            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 15.0),
-            overlayShape: RoundSliderOverlayShape(overlayRadius: 30.0),
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 15.0),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 30.0),
           ),
           child: Slider(
             value: age,
@@ -181,7 +184,7 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
             },
           ),
         ),
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('0'),

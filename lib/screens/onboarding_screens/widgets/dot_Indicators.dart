@@ -1,8 +1,4 @@
-import 'package:ez_health/screens/admin_screens/admin_screen.dart';
 import 'package:ez_health/screens/admin_screens/sign_in.dart';
-import 'package:ez_health/screens/doctor_screens/main_screen.dart';
-import 'package:ez_health/screens/login_screens/sign_in_screen.dart';
-import 'package:ez_health/screens/patient/doctor_appointment.dart';
 import 'package:ez_health/screens/onboarding_screens/widgets/custom_navigation_button/customNavigationButton.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';

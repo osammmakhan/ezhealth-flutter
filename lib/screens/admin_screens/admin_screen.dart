@@ -7,6 +7,8 @@ import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
 import 'dart:io';
 
 class AdminSignUpScreen extends StatefulWidget {
+  const AdminSignUpScreen({super.key});
+
   @override
   _AdminSignUpScreenState createState() => _AdminSignUpScreenState();
 }
@@ -29,14 +31,14 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: Form(
             key: _formKey,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
+                const Text(
                   'Admin Sign Up',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -44,7 +46,7 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                Text(
+                const Text(
                   'Create Your New Account',
                   textAlign: TextAlign.center,
                 ),
@@ -56,19 +58,19 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
                       radius: 50,
                       backgroundImage: _profileImage != null
                           ? FileImage(File(_profileImage!.path))
-                          : AssetImage('assets/default_profile.png')
+                          : const AssetImage('assets/default_profile.png')
                               as ImageProvider,
                       child: _profileImage == null
-                          ? Icon(Icons.camera_alt,
+                          ? const Icon(Icons.camera_alt,
                               size: 30, color: Colors.white)
                           : null,
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 TextFormField(
                   controller: _emailController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Email Address',
                     prefixIcon: Icon(Icons.email),
                     border: InputBorder.none,
@@ -90,10 +92,10 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 TextFormField(
                   controller: _fullNameController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Full Name',
                     prefixIcon: Icon(Icons.person),
                     border: InputBorder.none,
@@ -111,13 +113,13 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
+                    prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
@@ -131,10 +133,10 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
                       },
                     ),
                     border: InputBorder.none,
-                    enabledBorder: UnderlineInputBorder(
+                    enabledBorder: const UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey),
                     ),
-                    focusedBorder: UnderlineInputBorder(
+                    focusedBorder: const UnderlineInputBorder(
                       borderSide: BorderSide(color: customBlue),
                     ),
                   ),
@@ -148,13 +150,13 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 20),
-                Text('Age',
+                const SizedBox(height: 20),
+                const Text('Age',
                     style:
                         TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 _buildAgeSlider(),
-                SizedBox(height: 20),
-                Text('Gender',
+                const SizedBox(height: 20),
+                const Text('Gender',
                     style:
                         TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 _buildDropdown(
@@ -162,7 +164,7 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
                     (value) {
                   setState(() => _gender = value);
                 }),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 HorizontalBtn(
                   text: 'Create Account',
                   onPressed: _createAccount,
@@ -180,7 +182,7 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
       children: [
         Text(
           '${_age.toInt()}',
-          style: TextStyle(
+          style: const TextStyle(
               fontSize: 40, fontWeight: FontWeight.bold, color: customBlue),
         ),
         SliderTheme(
@@ -189,8 +191,8 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
             inactiveTrackColor: customBlue.withOpacity(0.3),
             thumbColor: Colors.white,
             overlayColor: Colors.blue.withOpacity(0.4),
-            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 15.0),
-            overlayShape: RoundSliderOverlayShape(overlayRadius: 30.0),
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 15.0),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 30.0),
           ),
           child: Slider(
             value: _age,
@@ -202,7 +204,7 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
             },
           ),
         ),
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [Text('0'), Text('100')],
         ),
@@ -222,7 +224,7 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
         child: DropdownButton<String>(
           isExpanded: true,
           hint: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Text(hint),
           ),
           value: value,
@@ -242,8 +244,8 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
   }
 
   Future<void> _pickImage() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       setState(() {
         _profileImage = image;
@@ -280,7 +282,7 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
       } on FirebaseAuthException catch (e) {
         if (e.code == 'email-already-in-use') {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
                 content: Text('An account already exists for that email.')),
           );
         } else {
@@ -290,7 +292,7 @@ class _AdminSignUpScreenState extends State<AdminSignUpScreen> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An unexpected error occurred.')),
+          const SnackBar(content: Text('An unexpected error occurred.')),
         );
       }
     }

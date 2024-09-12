@@ -3,15 +3,17 @@ import 'package:ez_health/assets/constants/constants.dart';
 import 'payment_method_list_screen.dart';
 
 class PaymentMethodScreen extends StatelessWidget {
+  const PaymentMethodScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text('Payment Methods', style: TextStyle(color: Colors.white)),
+        title: const Text('Payment Methods', style: TextStyle(color: Colors.white)),
         backgroundColor: customBlue,
         elevation: 0,
       ),
@@ -19,12 +21,12 @@ class PaymentMethodScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            const Text(
               'No Payment Found',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
-            Padding(
+            const SizedBox(height: 10),
+            const Padding(
               padding: EdgeInsets.symmetric(horizontal: 40),
               child: Text(
                 'You can add and edit payments during checkout',
@@ -32,7 +34,7 @@ class PaymentMethodScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             Container(
               width: 280,
               height: 120,
@@ -44,7 +46,7 @@ class PaymentMethodScreen extends StatelessWidget {
                     color: Colors.grey.withOpacity(0.3),
                     spreadRadius: 5,
                     blurRadius: 7,
-                    offset: Offset(0, 3),
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
@@ -69,10 +71,10 @@ class PaymentMethodScreen extends StatelessWidget {
                           shape: BoxShape.circle,
                           border: Border.all(color: customBlue, width: 2),
                         ),
-                        child: Icon(Icons.add, color: customBlue, size: 30),
+                        child: const Icon(Icons.add, color: customBlue, size: 30),
                       ),
-                      SizedBox(height: 10),
-                      Text(
+                      const SizedBox(height: 10),
+                      const Text(
                         'Add Payment Method',
                         style: TextStyle(
                           color: customBlue,

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 
 class DoctorScreen extends StatelessWidget {
+  const DoctorScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -12,16 +14,16 @@ class DoctorScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DoctorProfile(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
               child: Text(
                 'Current Appointment',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
             CurrentAppointmentCard(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
               child: Text(
                 'Upcoming Appointments',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -34,7 +36,7 @@ class DoctorScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: [
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.email), label: ''),
           BottomNavigationBarItem(icon: Icon(Icons.search), label: ''),
           BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
@@ -47,10 +49,12 @@ class DoctorScreen extends StatelessWidget {
 }
 
 class DoctorProfile extends StatelessWidget {
+  const DoctorProfile({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    return const Padding(
+      padding: EdgeInsets.all(16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -71,6 +75,8 @@ class DoctorProfile extends StatelessWidget {
 }
 
 class CurrentAppointmentCard extends StatefulWidget {
+  const CurrentAppointmentCard({super.key});
+
   @override
   _CurrentAppointmentCardState createState() => _CurrentAppointmentCardState();
 }
@@ -81,15 +87,15 @@ class _CurrentAppointmentCardState extends State<CurrentAppointmentCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
             child: Center(
               child: Text(
                 'Jan 1, 2024 - 5:00 PM',
@@ -97,7 +103,7 @@ class _CurrentAppointmentCardState extends State<CurrentAppointmentCard> {
               ),
             ),
           ),
-          Divider(
+          const Divider(
             height: 1,
             indent: 20,
             endIndent: 20,
@@ -116,8 +122,8 @@ class _CurrentAppointmentCardState extends State<CurrentAppointmentCard> {
                     fit: BoxFit.cover,
                   ),
                 ),
-                SizedBox(width: 16),
-                Expanded(
+                const SizedBox(width: 16),
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -138,8 +144,8 @@ class _CurrentAppointmentCardState extends State<CurrentAppointmentCard> {
             ),
           ),
           AnimatedCrossFade(
-            firstChild: SizedBox.shrink(),
-            secondChild: Padding(
+            firstChild: const SizedBox.shrink(),
+            secondChild: const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,26 +167,26 @@ class _CurrentAppointmentCardState extends State<CurrentAppointmentCard> {
             crossFadeState: _isExpanded
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
-            duration: Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 300),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: ElevatedButton(
-              child: Text(_isExpanded ? 'Less Info' : 'More Info'),
               onPressed: () {
                 setState(() {
                   _isExpanded = !_isExpanded;
                 });
               },
               style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 36),
+                minimumSize: const Size(double.infinity, 36),
                 backgroundColor: customBlue,
                 foregroundColor: Colors.white,
               ),
+              child: Text(_isExpanded ? 'Less Info' : 'More Info'),
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -193,7 +199,7 @@ void _showMoreInfo(BuildContext context) {
     builder: (BuildContext context) {
       return BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-        child: AlertDialog(
+        child: const AlertDialog(
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,7 +218,7 @@ void _showMoreInfo(BuildContext context) {
 class ProblemDescription extends StatelessWidget {
   final String problem;
 
-  const ProblemDescription({Key? key, required this.problem}) : super(key: key);
+  const ProblemDescription({super.key, required this.problem});
 
   @override
   Widget build(BuildContext context) {
@@ -220,7 +226,7 @@ class ProblemDescription extends StatelessWidget {
       text: TextSpan(
         style: DefaultTextStyle.of(context).style,
         children: [
-          TextSpan(
+          const TextSpan(
             text: 'Problem: ',
             style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
           ),
@@ -234,7 +240,7 @@ class ProblemDescription extends StatelessWidget {
 class BookingID extends StatelessWidget {
   final String id;
 
-  const BookingID({Key? key, required this.id}) : super(key: key);
+  const BookingID({super.key, required this.id});
 
   @override
   Widget build(BuildContext context) {
@@ -242,9 +248,9 @@ class BookingID extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
         children: [
-          Icon(Icons.confirmation_number, size: 16, color: Colors.grey),
-          SizedBox(width: 8),
-          Text('Booking ID: $id', style: TextStyle(color: Colors.grey)),
+          const Icon(Icons.confirmation_number, size: 16, color: Colors.grey),
+          const SizedBox(width: 8),
+          Text('Booking ID: $id', style: const TextStyle(color: Colors.grey)),
         ],
       ),
     );
@@ -252,12 +258,14 @@ class BookingID extends StatelessWidget {
 }
 
 class AppointmentList extends StatelessWidget {
+  const AppointmentList({super.key});
+
   @override
   Widget build(BuildContext context) {
     // This is a placeholder. You would typically use a ListView.builder here
     // with actual appointment data.
     return ListView(
-      children: [
+      children: const [
         AppointmentCard(
           name: 'Jane Doe',
           problem:
@@ -287,37 +295,37 @@ class AppointmentCard extends StatelessWidget {
   final String time;
 
   const AppointmentCard({
-    Key? key,
+    super.key,
     required this.name,
     required this.problem,
     required this.time,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            leading: CircleAvatar(
+            leading: const CircleAvatar(
               backgroundImage: AssetImage('assets/patient_profile.png'),
             ),
             title: Text(
               name,
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: ProblemDescription(problem: problem),
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
-              child: Text('Appointment at $time'),
               onPressed: () {},
               style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 36),
+                minimumSize: const Size(double.infinity, 36),
               ),
+              child: Text('Appointment at $time'),
             ),
           ),
         ],
@@ -332,17 +340,16 @@ class InfoRow extends StatelessWidget {
   final String value;
 
   const InfoRow(
-      {Key? key, required this.icon, required this.label, required this.value})
-      : super(key: key);
+      {super.key, required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         Icon(icon, size: 16, color: Colors.grey),
-        SizedBox(width: 8),
-        Text('$label ', style: TextStyle(color: Colors.grey)),
-        Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(width: 8),
+        Text('$label ', style: const TextStyle(color: Colors.grey)),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
       ],
     );
   }

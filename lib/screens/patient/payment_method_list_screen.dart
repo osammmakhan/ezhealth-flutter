@@ -16,15 +16,17 @@ class PaymentMethodListScreen extends StatelessWidget {
     {'name': 'Diners', 'icon': 'lib/assets/images/payment_method/diners.png'},
   ];
 
+  const PaymentMethodListScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text('Payment Methods', style: TextStyle(color: Colors.white)),
+        title: const Text('Payment Methods', style: TextStyle(color: Colors.white)),
         backgroundColor: customBlue,
         elevation: 0,
       ),
@@ -32,7 +34,7 @@ class PaymentMethodListScreen extends StatelessWidget {
         child: ListView.builder(
           itemCount: paymentMethods.length,
           shrinkWrap: true,
-          padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           itemBuilder: (context, index) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
@@ -48,7 +50,7 @@ class PaymentMethodListScreen extends StatelessWidget {
                         'Add ${paymentMethods[index]['name']} payment method');
                   },
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                     child: Row(
                       children: [
                         Image.asset(
@@ -57,17 +59,17 @@ class PaymentMethodListScreen extends StatelessWidget {
                           height: 25,
                           fit: BoxFit.contain,
                         ),
-                        SizedBox(width: 16),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: Text(
                             paymentMethods[index]['name']!,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
-                        Icon(Icons.chevron_right, color: Colors.grey),
+                        const Icon(Icons.chevron_right, color: Colors.grey),
                       ],
                     ),
                   ),

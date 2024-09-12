@@ -27,7 +27,7 @@ class HorizontalBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       child: ElevatedButton(
         onPressed: () {
           onPressed();
@@ -38,14 +38,6 @@ class HorizontalBtn extends StatelessWidget {
             );
           }
         },
-        child: Text(
-          text,
-          style: textStyle ??
-              const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-              ),
-        ),
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ??
               customBlue, // Use passed backgroundColor or default
@@ -58,6 +50,14 @@ class HorizontalBtn extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
           ),
           padding: const EdgeInsets.symmetric(vertical: 15),
+        ),
+        child: Text(
+          text,
+          style: textStyle ??
+              const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+              ),
         ),
       ),
     );

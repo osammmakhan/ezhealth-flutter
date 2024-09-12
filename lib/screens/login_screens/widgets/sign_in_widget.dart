@@ -8,10 +8,10 @@ class SignInWidget extends StatefulWidget {
   final Function(String) onUserTypeChange;
 
   const SignInWidget({
-    Key? key,
+    super.key,
     required this.userType,
     required this.onUserTypeChange,
-  }) : super(key: key);
+  });
 
   @override
   _SignInWidgetState createState() => _SignInWidgetState();
@@ -36,7 +36,7 @@ class _SignInWidgetState extends State<SignInWidget> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
+                const Text(
                   'Sign In',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -55,7 +55,7 @@ class _SignInWidgetState extends State<SignInWidget> {
                 const SizedBox(height: 32),
                 TextFormField(
                   controller: _emailController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Email Address',
                     prefixIcon: Icon(Icons.email),
                   ),
@@ -72,7 +72,7 @@ class _SignInWidgetState extends State<SignInWidget> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
+                    prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
@@ -104,13 +104,13 @@ class _SignInWidgetState extends State<SignInWidget> {
                         });
                       },
                     ),
-                    Text('Remember password'),
-                    Spacer(),
+                    const Text('Remember password'),
+                    const Spacer(),
                     TextButton(
                       onPressed: () {
                         // TODO: Implement forgot password functionality
                       },
-                      child: Text('Forget password'),
+                      child: const Text('Forget password'),
                     ),
                   ],
                 ),
@@ -122,7 +122,7 @@ class _SignInWidgetState extends State<SignInWidget> {
                   onPressed: signIn,
                 ),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   'or connect with',
                   textAlign: TextAlign.center,
                 ),
@@ -149,9 +149,9 @@ class _SignInWidgetState extends State<SignInWidget> {
                   },
                   child: RichText(
                     text: TextSpan(
-                      style: TextStyle(fontSize: 16),
+                      style: const TextStyle(fontSize: 16),
                       children: [
-                        TextSpan(
+                        const TextSpan(
                           text: 'Login as ',
                           style: TextStyle(color: Colors.black),
                         ),
@@ -159,7 +159,7 @@ class _SignInWidgetState extends State<SignInWidget> {
                           text: widget.userType == 'Patient'
                               ? 'Doctor'
                               : 'Patient',
-                          style: TextStyle(color: customBlue),
+                          style: const TextStyle(color: customBlue),
                         ),
                       ],
                     ),
