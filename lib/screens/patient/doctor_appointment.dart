@@ -67,7 +67,7 @@ class _DoctorAppointmentScreenState extends State<DoctorAppointmentScreen> {
             //Make Appointment Button
             HorizontalBtn(
               text: 'Make Appointment',
-              nextScreen: AppointmentDetailsScreen(),
+              nextScreen: const AppointmentDetailsScreen(),
               onPressed: () {},
             ),
           ],
@@ -216,12 +216,12 @@ class _DoctorAppointmentScreenState extends State<DoctorAppointmentScreen> {
         children: [
           Text(
             DateFormat('EEE').format(date),
-            style: TextStyle(fontSize: 14, color: Colors.grey),
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
             DateFormat('d MMM').format(date),
-            style: TextStyle(fontSize: 16, color: Colors.black),
+            style: const TextStyle(fontSize: 16, color: Colors.black),
           ),
         ],
       ),

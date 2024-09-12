@@ -10,7 +10,7 @@ class PatientSignInPage extends StatelessWidget {
       userType: 'Patient',
       onUserTypeChange: (newUserType) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => DoctorSignInPage()),
+          MaterialPageRoute(builder: (_) => const DoctorSignInPage()),
         );
       },
     );
@@ -26,7 +26,7 @@ class DoctorSignInPage extends StatelessWidget {
       userType: 'Doctor',
       onUserTypeChange: (newUserType) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => PatientSignInPage()),
+          MaterialPageRoute(builder: (_) => const PatientSignInPage()),
         );
       },
     );

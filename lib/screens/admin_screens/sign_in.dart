@@ -1,7 +1,6 @@
 import 'package:ez_health/screens/admin_screens/admin_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
 
 class AdminSignInPage extends StatefulWidget {
@@ -114,7 +113,7 @@ class _AdminSignInPageState extends State<AdminSignInPage> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => AdminSignUpScreen()),
+                      MaterialPageRoute(builder: (_) => const AdminSignUpScreen()),
                     );
                   },
                   child: const Text('Don\'t have an account? Sign Up'),

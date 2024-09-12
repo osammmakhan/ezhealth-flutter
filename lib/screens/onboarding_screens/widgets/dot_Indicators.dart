@@ -32,7 +32,7 @@ class _DotIndicatorState extends State<DotIndicator> {
   void _navigateToDoctorAppointmentScreen() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (context) => AdminSignInPage(),
+        builder: (context) => const AdminSignInPage(),
       ),
     );
   }

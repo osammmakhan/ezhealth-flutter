@@ -107,7 +107,7 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
             child: HorizontalBtn(
                 text: 'Process to Payment',
                 // context: context,
-                nextScreen: PaymentMethodScreen(),
+                nextScreen: const PaymentMethodScreen(),
                 onPressed: () {
                   // Handle the appointment creation here
                   print('Appointment details:');

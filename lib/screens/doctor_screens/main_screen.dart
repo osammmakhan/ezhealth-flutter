@@ -1,5 +1,4 @@
 import 'package:ez_health/assets/constants/constants.dart';
-import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 
@@ -9,12 +8,12 @@ class DoctorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
+      body: const SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DoctorProfile(),
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(
                 'Current Appointment',
@@ -22,7 +21,7 @@ class DoctorScreen extends StatelessWidget {
               ),
             ),
             CurrentAppointmentCard(),
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(
                 'Upcoming Appointments',
