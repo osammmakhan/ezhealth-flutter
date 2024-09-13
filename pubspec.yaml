@@ -37,10 +37,13 @@ dependencies:
   intl: ^0.19.0
   flutter_rating_bar: ^4.0.0
   carousel_slider: ^5.0.0
-  firebase_core: ^2.32.0
-  firebase_auth: ^4.16.0
+  firebase_core: ^3.4.1
+  firebase_auth: ^5.2.1
   image_picker: ^1.1.2
-  cloud_firestore: ^4.14.0
+  cloud_firestore: ^5.4.1
+  firebase_core_web: ^2.6.0  # REMOVE this for mobile builds
+  firebase_auth_web: ^5.8.13 # REMOVE this for mobile builds
+  cloud_firestore_web: ^4.3.0 # REMOVE this for mobile builds
 
 dev_dependencies:
   flutter_test:
