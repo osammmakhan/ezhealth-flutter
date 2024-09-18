@@ -1,8 +1,8 @@
-import 'package:ez_health/screens/onboarding_screens/onboarding_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:ez_health/screens/onboarding_screens/onboarding_screen.dart';
 
-Future main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
