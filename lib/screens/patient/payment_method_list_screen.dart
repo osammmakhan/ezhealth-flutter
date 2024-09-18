@@ -16,7 +16,7 @@ class PaymentMethodListScreen extends StatelessWidget {
     {'name': 'Diners', 'icon': 'lib/assets/images/payment_method/diners.png'},
   ];
 
-  const PaymentMethodListScreen({super.key});
+  PaymentMethodListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,8 @@ class PaymentMethodListScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Payment Methods', style: TextStyle(color: Colors.white)),
+        title: const Text('Payment Methods',
+            style: TextStyle(color: Colors.white)),
         backgroundColor: customBlue,
         elevation: 0,
       ),
@@ -50,7 +51,8 @@ class PaymentMethodListScreen extends StatelessWidget {
                         'Add ${paymentMethods[index]['name']} payment method');
                   },
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16, horizontal: 24),
                     child: Row(
                       children: [
                         Image.asset(

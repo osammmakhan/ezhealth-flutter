@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "29965316139",
-    "project_id": "ez-health-8a163",
-    "storage_bucket": "ez-health-8a163.appspot.com"
+    "project_number": "735235674573",
+    "project_id": "ezhealth-32082",
+    "storage_bucket": "ezhealth-32082.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:29965316139:android:958521c9c6bb7457353a6e",
+        "mobilesdk_app_id": "1:735235674573:android:21818f171c0113be5ff484",
         "android_client_info": {
           "package_name": "com.syedlord.ez_health"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCRHChdhYuX-hf12tyoodZU030Me27wOZ0"
+          "current_key": "AIzaSyAypF89ApLUkusAtx1ersR1a4pn4x-xzgo"
         }
       ],
       "services": {

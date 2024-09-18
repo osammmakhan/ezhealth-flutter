@@ -1,8 +1,9 @@
-import 'package:ez_health/screens/admin_screens/sign_in.dart';
-import 'package:ez_health/screens/onboarding_screens/widgets/custom_navigation_button/customNavigationButton.dart';
+import 'package:ez_health/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:ez_health/assets/constants/constants.dart';
+
+// import '../patient/doctor_appointment.dart';
 
 class DotIndicator extends StatefulWidget {
   const DotIndicator({
@@ -32,7 +33,8 @@ class _DotIndicatorState extends State<DotIndicator> {
   void _navigateToDoctorAppointmentScreen() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (context) => const AdminSignInPage(),
+        // builder: (context) => DoctorAppointmentScreen(),
+        builder: (context) => const AuthScreen(),
       ),
     );
   }
@@ -45,12 +47,11 @@ class _DotIndicatorState extends State<DotIndicator> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Previous Button (Custom Navigation Button)
           CustomNavigationButton(
             icon: Icons.arrow_back_ios,
             isFilled: _currentPage != 0,
             onPressed: _currentPage == 0
-                ? null // Disable button on first page
+                ? null
                 : () {
                     widget._controller.previousPage(
                       duration: const Duration(milliseconds: 300),
@@ -58,7 +59,6 @@ class _DotIndicatorState extends State<DotIndicator> {
                     );
                   },
           ),
-          // Dot Indicators
           SmoothPageIndicator(
             controller: widget._controller,
             count: 3,
@@ -66,12 +66,11 @@ class _DotIndicatorState extends State<DotIndicator> {
               activeDotColor: customBlue,
             ),
           ),
-          // Next Button (Custom Navigation Button)
           CustomNavigationButton(
             icon: _currentPage == 2 ? Icons.check : Icons.arrow_forward_ios,
-            isFilled: true, // Always filled to indicate it's active
+            isFilled: true,
             onPressed: _currentPage == 2
-                ? _navigateToDoctorAppointmentScreen // Navigate to DoctorAppointmentScreen on last page
+                ? _navigateToDoctorAppointmentScreen
                 : () {
                     widget._controller.nextPage(
                       duration: const Duration(milliseconds: 300),
@@ -80,6 +79,40 @@ class _DotIndicatorState extends State<DotIndicator> {
                   },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class CustomNavigationButton extends StatelessWidget {
+  final IconData icon;
+  final bool isFilled;
+  final VoidCallback? onPressed;
+
+  const CustomNavigationButton({
+    super.key,
+    required this.icon,
+    required this.isFilled,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        shape: const CircleBorder(),
+        padding: const EdgeInsets.all(20),
+        backgroundColor: isFilled ? customBlue : Colors.white,
+        side: const BorderSide(
+          color: customBlue,
+          width: 2,
+        ),
+        elevation: isFilled ? 2 : 0,
+      ),
+      child: Icon(
+        icon,
+        color: isFilled ? Colors.white : customBlue,
       ),
     );
   }

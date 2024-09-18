@@ -13,7 +13,8 @@ class PaymentMethodScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Payment Methods', style: TextStyle(color: Colors.white)),
+        title: const Text('Payment Methods',
+            style: TextStyle(color: Colors.white)),
         backgroundColor: customBlue,
         elevation: 0,
       ),
@@ -58,7 +59,7 @@ class PaymentMethodScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const PaymentMethodListScreen()),
+                          builder: (context) => PaymentMethodListScreen()),
                     );
                   },
                   child: Column(
@@ -71,7 +72,8 @@ class PaymentMethodScreen extends StatelessWidget {
                           shape: BoxShape.circle,
                           border: Border.all(color: customBlue, width: 2),
                         ),
-                        child: const Icon(Icons.add, color: customBlue, size: 30),
+                        child:
+                            const Icon(Icons.add, color: customBlue, size: 30),
                       ),
                       const SizedBox(height: 10),
                       const Text(
