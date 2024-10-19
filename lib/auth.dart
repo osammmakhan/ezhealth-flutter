@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-// import 'package:ez_health/assets/constants/constants.dart';
-import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ez_health/screens/patient/doctor_appointment.dart';
 
+// Social Login
+// Context Based Login
+// Forgot Password Email Functionality
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
 
@@ -24,11 +25,19 @@ class _AuthScreenState extends State<AuthScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                isLogin ? 'Sign In' : 'Sign Up',
-                style: const TextStyle(
+              const Text(
+                'Sign In',
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 26,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const Text(
+                'Welcome Back, You\'ve been missed',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -44,17 +53,15 @@ class _AuthScreenState extends State<AuthScreen> {
                         password: password,
                       );
                     } else {
-                      await FirebaseAuth.instance
-                          .createUserWithEmailAndPassword(
+                      await FirebaseAuth.instance.createUserWithEmailAndPassword(
                         email: email,
                         password: password,
                       );
                     }
-                    // Navigate to the DoctorAppointmentScreen after successful auth
+                    // Navigate to the Doctor/Patient/Admin Screen based on the credentials
+                    //after successful auth
                     Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              const DoctorAppointmentScreen()),
+                      MaterialPageRoute(builder: (context) => const DoctorAppointmentScreen()),
                     );
                   } on FirebaseAuthException catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -63,21 +70,47 @@ class _AuthScreenState extends State<AuthScreen> {
                   }
                 },
               ),
+              const SizedBox(height: 16),
+              const Text(
+                'or connect with',
+                style: TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _socialLoginButton('assets/images/sociallogin-assets/facebook_logo.png'),
+                  _socialLoginButton('assets/images/sociallogin-assets/pinterest_logo.png'),
+                  _socialLoginButton('assets/images/sociallogin-assets/instagram_logo.png'),
+                  _socialLoginButton('assets/images/sociallogin-assets/linkedin_logo.png'),
+                ],
+              ),
+              const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  setState(() {
-                    isLogin = !isLogin;
-                  });
+                  // TODO: Implement doctor login
                 },
-                child: Text(
-                  isLogin
-                      ? 'Need an account? Sign up'
-                      : 'Have an account? Sign in',
+                child: const Text(
+                  'Login as Doctor',
+                  style: TextStyle(color: Colors.blue),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _socialLoginButton(String assetName) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: InkWell(
+        onTap: () {
+          // TODO: Implement social login
+        },
+        child: Image.asset(assetName, width: 40, height: 40),
       ),
     );
   }
@@ -101,7 +134,6 @@ class _AuthWidgetState extends State<AuthWidget> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -150,35 +182,33 @@ class _AuthWidgetState extends State<AuthWidget> {
               return null;
             },
           ),
-          if (!widget.isLogin) ...[
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _confirmPasswordController,
-              obscureText: _obscurePassword,
-              decoration: const InputDecoration(
-                labelText: 'Confirm Password',
-                prefixIcon: Icon(Icons.lock),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please confirm your password';
-                }
-                if (value != _passwordController.text) {
-                  return 'Passwords do not match';
-                }
-                return null;
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () {
+                _showForgotPasswordDialog(context);
               },
+              child: const Text(
+                'Forgot password?',
+                style: TextStyle(color: Colors.blue),
+              ),
             ),
-          ],
+          ),
           const SizedBox(height: 16),
           _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : HorizontalBtn(
-                  text: widget.isLogin ? 'Login' : 'Sign Up',
+              : ElevatedButton(
                   onPressed: _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text(
+                    'Login',
+                    style: TextStyle(fontSize: 18),
+                  ),
                 ),
-          const SizedBox(height: 16),
-          // Social login buttons and other UI elements...
         ],
       ),
     );
@@ -189,11 +219,65 @@ class _AuthWidgetState extends State<AuthWidget> {
       setState(() {
         _isLoading = true;
       });
-      await widget.onSubmit(
-          _emailController.text.trim(), _passwordController.text.trim());
+      await widget.onSubmit(_emailController.text.trim(), _passwordController.text.trim());
       setState(() {
         _isLoading = false;
       });
     }
+  }
+
+  void _showForgotPasswordDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final TextEditingController emailController = TextEditingController();
+
+        return AlertDialog(
+          title: const Text('Forgot Password'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Enter your email to reset your password:'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (emailController.text.isNotEmpty) {
+                  try {
+                    await FirebaseAuth.instance.sendPasswordResetEmail(
+                      email: emailController.text.trim(),
+                    );
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Password reset email sent. Check your inbox.')),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: ${e.toString()}')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Reset Password'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
