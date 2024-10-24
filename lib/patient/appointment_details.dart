@@ -1,5 +1,5 @@
 import 'package:ez_health/assets/constants/constants.dart';
-import 'package:ez_health/screens/patient/payment_method_screen.dart';
+import 'package:ez_health/patient/payment_method_screen.dart';
 import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
 import 'package:flutter/material.dart';
 

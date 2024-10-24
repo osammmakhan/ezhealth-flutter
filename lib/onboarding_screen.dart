@@ -23,7 +23,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             controller: _controller,
             children: const [
               OnBoardingPage(
-                  svgImage: 'lib/assets/images/onboarding-assets/Doctor Checkup.svg',
+                  svgImage: 'lib/assets/images/onboarding-assets/Calendar Guy.svg',
                   imageLabel: 'Image 1',
                   displayText1: 'Discover\t',
                   textColor1: Colors.black,
@@ -32,7 +32,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   descriptionText:
                       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper'),
               OnBoardingPage(
-                  svgImage: 'lib/assets/images/onboarding-assets/Medical Team.svg',
+                  svgImage: 'lib/assets/images/onboarding-assets/Doctor Checkup.svg',
                   imageLabel: 'Image 2',
                   displayText1: 'Learn About\t',
                   textColor1: customBlue,
@@ -41,9 +41,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   descriptionText:
                       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper'),
               OnBoardingPage(
-                svgImage: 'lib/assets/images/onboarding-assets/Calendar Guy.svg',
+                svgImage: 'lib/assets/images/onboarding-assets/Medical Team.svg',
                 imageLabel: 'Image 3',
-                displayText1: 'Efforless\t',
+                displayText1: 'Effortless\t',
                 textColor1: Colors.black,
                 displayText2: 'Appointment\nBooking',
                 textColor2: customBlue,
