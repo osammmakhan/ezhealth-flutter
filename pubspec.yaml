@@ -75,11 +75,8 @@ flutter:
   - lib/assets/images/onboarding-assets/Calendar Guy.svg
   - lib/assets/images/onboarding-assets/Doctor Checkup.svg
   - lib/assets/images/onboarding-assets/Medical Team.svg
-  - lib/assets/images/sociallogin-assets/facebook_logo.png
-  - lib/assets/images/sociallogin-assets/insta_logo.png
-  - lib/assets/images/sociallogin-assets/linkedin_logo.png
-  - lib/assets/images/sociallogin-assets/pinterest_logo.png
-  # - lib/assets/images/paymentmethod-assets/
+  - lib/assets/images/sociallogin-assets/
+  - lib/assets/images/paymentmethod-assets/
   # - lib/screens/login_screens/assets/images/
 
   # An image asset can refer to one or more resolution-specific "variants", see

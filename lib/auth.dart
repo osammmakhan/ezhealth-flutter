@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:ez_health/patient/doctor_appointment.dart';
+import 'package:ez_health/assets/constants/constants.dart';
+import 'package:ez_health/patient/patient_home_screen.dart';
 
-// // Social Login
-// // Context Based Login
-// // Forgot Password Email Functionality
+// TODO: Social Login
+// TODO: Context Based Login
+// TODO: Connect Firebase to Forgot Password Email Functionality
 
 // Sign In Screen
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
 
   @override
-  _AuthScreenState createState() => _AuthScreenState();
+  State<AuthScreen> createState() => _AuthScreenState();
 }
 
 class _AuthScreenState extends State<AuthScreen> {
@@ -29,31 +30,35 @@ class _AuthScreenState extends State<AuthScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 60),
-                Text(
-                  isLogin ? 'Sign In' : 'Create Account',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 26,
-                  ),
-                  textAlign: TextAlign.center,
+                const SizedBox(height: 80), // Increased top spacing
+                // Header Section
+                Column(
+                  children: [
+                    Text(
+                      isLogin ? 'Sign In' : 'Create Account',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 28,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      isLogin
+                          ? 'Welcome Back, You\'ve been missed'
+                          : 'Sign up to get started!',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  isLogin
-                      ? 'Welcome Back, You\'ve been missed'
-                      : 'Sign up to get started!',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 60), // Increased spacing
+                // Auth Form
                 AuthWidget(
                   isLogin: isLogin,
                   onSubmit: (email, password, {String? name}) async {
@@ -77,12 +82,9 @@ class _AuthScreenState extends State<AuthScreen> {
                         }
                       }
                       // Navigate to the Doctor/Patient/Admin Screen based on the credentials
-                      // after successful auth
-                      // Navigate to the main screen
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
-                            builder: (context) =>
-                                const DoctorAppointmentScreen()),
+                            builder: (context) => const HomeScreen()),
                       );
                     } on FirebaseAuthException catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -92,29 +94,32 @@ class _AuthScreenState extends State<AuthScreen> {
                     }
                   },
                 ),
-                if (isLogin) ...[
-                  const SizedBox(height: 16),
-                  const Text(
-                    'or connect with',
-                    style: TextStyle(color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _socialLoginButton(
-                          'lib/assets/images/sociallogin-assets/facebook_logo.png'),
-                      _socialLoginButton(
-                          'lib/assets/images/sociallogin-assets/insta_logo.png'),
-                      _socialLoginButton(
-                          'lib/assets/images/sociallogin-assets/linkedin_logo.png'),
-                      _socialLoginButton(
-                          'lib/assets/images/sociallogin-assets/pinterest_logo.png'),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 16),
+                const SizedBox(height: 40), // Adjusted spacing
+                // Social Login Section
+                Column(
+                  children: [
+                    const Text(
+                      'or connect with',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _socialLoginButton(
+                            'lib/assets/images/sociallogin-assets/facebook_logo.png'),
+                        _socialLoginButton(
+                            'lib/assets/images/sociallogin-assets/google_logo.png'),
+                        _socialLoginButton(
+                            'lib/assets/images/sociallogin-assets/twitterx_logo.png'),
+                        _socialLoginButton(
+                            'lib/assets/images/sociallogin-assets/microsoft_logo.png'),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                // Toggle Auth Mode Section
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -129,7 +134,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Text(
                         isLogin ? 'Sign Up' : 'Sign In',
                         style: const TextStyle(
-                          color: Colors.blue,
+                          color: customBlue,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -144,16 +149,21 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-// Remove this section if you remove Social Media Login functionality
-
   Widget _socialLoginButton(String assetName) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: InkWell(
         onTap: () {
-          // TODO: Implement social login
+          // Implement social login
         },
-        child: Image.asset(assetName, width: 40, height: 40),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Image.asset(assetName, width: 32, height: 32),
+        ),
       ),
     );
   }
@@ -170,7 +180,7 @@ class AuthWidget extends StatefulWidget {
   });
 
   @override
-  _AuthWidgetState createState() => _AuthWidgetState();
+  State<AuthWidget> createState() => _AuthWidgetState();
 }
 
 class _AuthWidgetState extends State<AuthWidget> {
@@ -202,9 +212,14 @@ class _AuthWidgetState extends State<AuthWidget> {
           if (!widget.isLogin) ...[
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Full Name',
-                prefixIcon: Icon(Icons.person),
+                prefixIcon: const Icon(Icons.person),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.grey[50],
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -217,9 +232,14 @@ class _AuthWidgetState extends State<AuthWidget> {
           ],
           TextFormField(
             controller: _emailController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Email Address',
-              prefixIcon: Icon(Icons.email),
+              prefixIcon: const Icon(Icons.email),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -239,6 +259,11 @@ class _AuthWidgetState extends State<AuthWidget> {
             decoration: InputDecoration(
               labelText: 'Password',
               prefixIcon: const Icon(Icons.lock),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,
@@ -268,6 +293,11 @@ class _AuthWidgetState extends State<AuthWidget> {
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
                 prefixIcon: const Icon(Icons.lock),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.grey[50],
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscureConfirmPassword
@@ -312,12 +342,19 @@ class _AuthWidgetState extends State<AuthWidget> {
               : ElevatedButton(
                   onPressed: _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: customBlue,
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: Text(
                     widget.isLogin ? 'Login' : 'Sign Up',
-                    style: const TextStyle(fontSize: 18),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: customLightBlue,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
         ],
@@ -361,12 +398,18 @@ class _AuthWidgetState extends State<AuthWidget> {
               const SizedBox(height: 16),
               TextField(
                 controller: emailController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Email',
-                  prefixIcon: Icon(Icons.email),
+                  prefixIcon: const Icon(Icons.email),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
           actions: [
             TextButton(
@@ -385,8 +428,9 @@ class _AuthWidgetState extends State<AuthWidget> {
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                          content: Text(
-                              'Password reset email sent. Check your inbox.')),
+                        content: Text(
+                            'Password reset email sent. Check your inbox.'),
+                      ),
                     );
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -395,6 +439,11 @@ class _AuthWidgetState extends State<AuthWidget> {
                   }
                 }
               },
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
               child: const Text('Reset Password'),
             ),
           ],

@@ -23,7 +23,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             controller: _controller,
             children: const [
               OnBoardingPage(
-                  svgImage: 'lib/assets/images/onboarding-assets/Calendar Guy.svg',
+                  svgImage:
+                      'lib/assets/images/onboarding-assets/Doctor Checkup.svg',
                   imageLabel: 'Image 1',
                   displayText1: 'Discover\t',
                   textColor1: Colors.black,
@@ -32,7 +33,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   descriptionText:
                       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper'),
               OnBoardingPage(
-                  svgImage: 'lib/assets/images/onboarding-assets/Doctor Checkup.svg',
+                  svgImage:
+                      'lib/assets/images/onboarding-assets/Medical Team.svg',
                   imageLabel: 'Image 2',
                   displayText1: 'Learn About\t',
                   textColor1: customBlue,
@@ -41,7 +43,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   descriptionText:
                       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper'),
               OnBoardingPage(
-                svgImage: 'lib/assets/images/onboarding-assets/Medical Team.svg',
+                svgImage:
+                    'lib/assets/images/onboarding-assets/Calendar Guy.svg',
                 imageLabel: 'Image 3',
                 displayText1: 'Effortless\t',
                 textColor1: Colors.black,
@@ -203,7 +206,7 @@ class DotIndicator extends StatefulWidget {
   final PageController _controller;
 
   @override
-  _DotIndicatorState createState() => _DotIndicatorState();
+  State<DotIndicator> createState() => _DotIndicatorState();
 }
 
 class _DotIndicatorState extends State<DotIndicator> {
@@ -248,7 +251,7 @@ class _DotIndicatorState extends State<DotIndicator> {
               },
             )
           else
-            const SizedBox(width: 48), // Placeholder for alignment
+            const SizedBox(width: 48),
           SmoothPageIndicator(
             controller: widget._controller,
             count: 3,
