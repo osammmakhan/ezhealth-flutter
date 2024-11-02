@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ez_health/assets/constants/constants.dart';
-import 'package:ez_health/patient/patient.dart';
+import 'package:ez_health/patient/appointment/patient_appointment_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool hasAppointment;
@@ -8,7 +8,7 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     this.hasAppointment = false,
-});
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -32,7 +32,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     CircleAvatar(
                       radius: 25,
-                      backgroundImage: AssetImage('lib/assets/images/user_profile.png'),),
+                      backgroundImage:
+                          AssetImage('lib/assets/images/Patient Profile.png'),
+                    ),
                     SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,20 +43,32 @@ class _HomeScreenState extends State<HomeScreen> {
                           'Welcome to EZ Health! 👋',
                           style: TextStyle(
                             fontSize: 24,
-                            fontWeight: FontWeight.bold,),),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         Text(
                           'Find your doctor and book appointments',
                           style: TextStyle(
                             color: Colors.grey,
-                            fontSize: 16,),),],),],),
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 24),
 
                 // Doctor Section Title
                 Text(
-                  widget.hasAppointment ? 'Your Doctor' : 'Get Your Appointment',
+                  widget.hasAppointment
+                      ? 'Your Doctor'
+                      : 'Get Your Appointment',
                   style: const TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,),),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 16),
 
                 // Doctor Card
@@ -79,12 +93,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                     'lib/assets/images/Doctor Profile Picture.png',
                                     width: 80,
                                     height: 80,
-                                    fit: BoxFit.cover,),),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
                                 const SizedBox(width: 16),
                                 // Doctor Info
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
@@ -103,14 +120,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                             decoration: BoxDecoration(
                                               color: Colors.blue,
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
                                             child: const Text(
                                               'DENTIST',
                                               style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 12,
-                                                fontWeight: FontWeight.bold,),),),],),
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                       const SizedBox(height: 4),
                                       Row(
                                         children: [
@@ -121,14 +144,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                             decoration: BoxDecoration(
                                               color: Colors.green[50],
-                                              borderRadius: BorderRadius.circular(8),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                             ),
                                             child: Row(
                                               children: [
                                                 Container(
                                                   width: 8,
                                                   height: 8,
-                                                  decoration: const BoxDecoration(
+                                                  decoration:
+                                                      const BoxDecoration(
                                                     color: Colors.green,
                                                     shape: BoxShape.circle,
                                                   ),
@@ -138,16 +163,33 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   'Available',
                                                   style: TextStyle(
                                                     color: Colors.green,
-                                                    fontSize: 12,),),],),),],),
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                       const SizedBox(height: 8),
                                       Row(
                                         children: [
                                           Icon(Icons.star,
-                                              color: Colors.yellow[700], size: 16),
+                                              color: Colors.yellow[700],
+                                              size: 16),
                                           const Text(
                                             ' 4.9',
                                             style: TextStyle(
-                                              fontWeight: FontWeight.bold,),),],),],),),],),
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: 12),
                             const Text(
                               'Bio',
@@ -161,7 +203,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper.',
                               style: TextStyle(
                                 color: Colors.grey,
-                                fontSize: 14,),),
+                                fontSize: 14,
+                              ),
+                            ),
                             const SizedBox(height: 16),
                             if (!widget.hasAppointment)
                               ElevatedButton(
@@ -169,19 +213,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const PatientAppointmentScreen(),
-                                    ),);},
+                                      builder: (context) =>
+                                          const PatientAppointmentScreen(),
+                                    ),
+                                  );
+                                },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),),),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
                                 child: const Text(
                                   'Make Appointment',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    fontWeight: FontWeight.bold,),),),],),),],),),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
                 // Appointment Section (only when hasAppointment is true)
                 if (widget.hasAppointment) ...[
@@ -190,7 +249,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     'Your Appointment',
                     style: TextStyle(
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,),),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   Card(
                     elevation: 4,
@@ -209,12 +270,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                 'Appointment at 5:00 PM',
                                 style: TextStyle(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.bold,),),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               Text(
                                 '#042',
                                 style: TextStyle(
                                   color: customBlue,
-                                  fontWeight: FontWeight.bold,),),],),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -225,14 +292,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Icons.calendar_today,
                                 () {
                                   // Handle reschedule
-                                },),
+                                },
+                              ),
                               _buildActionButton(
                                 context,
                                 'Cancel',
                                 Icons.close,
                                 () {
                                   // Handle cancel
-                                },),],),],),),),
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
 
                   // Waiting List
                   const SizedBox(height: 24),
@@ -240,7 +315,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     'Waiting List',
                     style: TextStyle(
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,),),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   ListView.builder(
                     shrinkWrap: true,
@@ -256,10 +333,24 @@ class _HomeScreenState extends State<HomeScreen> {
                               '#${(43 + index).toString().padLeft(3, '0')}',
                               style: const TextStyle(
                                 color: customBlue,
-                                fontWeight: FontWeight.bold,),),),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                           title: Text(
                             'Appointment at ${5 + (index ~/ 2)}:${index % 2 == 0 ? "00" : "30"} PM',
-                            style: const TextStyle(fontWeight: FontWeight.bold),),),);},),],],),),),),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: customBlue,
@@ -268,16 +359,27 @@ class _HomeScreenState extends State<HomeScreen> {
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
-              offset: const Offset(0, -2),),],),
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavBarItem(0, Icons.home, 'Home'),
                 _buildNavBarItem(1, Icons.calendar_today, 'Appointments'),
-                _buildNavBarItem(2, Icons.notifications, 'Notifications'),],),),),),);}
+                _buildNavBarItem(2, Icons.notifications, 'Notifications'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildNavBarItem(int index, IconData icon, String label) {
     final isSelected = _selectedIndex == index;
@@ -294,13 +396,23 @@ class _HomeScreenState extends State<HomeScreen> {
           Icon(
             size: 35,
             icon,
-            color: isSelected ? customLightBlue : customLightBlue.withOpacity(0.7),),
+            color:
+                isSelected ? customLightBlue : customLightBlue.withOpacity(0.7),
+          ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              color: isSelected ? customLightBlue : customLightBlue.withOpacity(0.7),
-              fontSize: 12,),),],),);}
+              color: isSelected
+                  ? customLightBlue
+                  : customLightBlue.withOpacity(0.7),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildActionButton(
     BuildContext context,
@@ -316,4 +428,9 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: label == 'Cancel' ? Colors.red[100] : customLightBlue,
         foregroundColor: label == 'Cancel' ? Colors.red : customBlue,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),),),);}}
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+}

@@ -4,6 +4,8 @@ import 'package:ez_health/auth.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '/assets/constants/constants.dart';
 
+// TODO: Add a splash screen that shows the app logo before the onboarding screen
+// TODO: Fix the back arrow alignment
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
