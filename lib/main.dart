@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'onboarding_screen.dart';
+import 'package:provider/provider.dart';
+import 'providers/appointment_provider.dart';
+import 'providers/payment_provider.dart';
+import 'providers/home_screen_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +17,16 @@ Future<void> main() async {
           messagingSenderId: "735235674573",
           projectId: "ezhealth-32082"));
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppointmentProvider()),
+        ChangeNotifierProvider(create: (_) => PaymentProvider()),
+        ChangeNotifierProvider(create: (_) => HomeScreenProvider()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

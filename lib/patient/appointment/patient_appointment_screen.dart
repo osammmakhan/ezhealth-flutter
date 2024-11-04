@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:provider/provider.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/patient/appointment/appointment_details_screen.dart';
 import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
+import 'package:ez_health/providers/appointment_provider.dart';
 
 class PatientAppointmentScreen extends StatefulWidget {
   const PatientAppointmentScreen({super.key});
@@ -14,9 +16,6 @@ class PatientAppointmentScreen extends StatefulWidget {
 }
 
 class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
-  int _selectedDateIndex = 0;
-  int _selectedTimeIndex = 0;
-
   List<DateTime> _generateWeekDays() {
     final now = DateTime.now();
     return List.generate(7, (index) => now.add(Duration(days: index)));
@@ -31,6 +30,8 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appointmentProvider = Provider.of<AppointmentProvider>(context);
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -56,25 +57,125 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 50),
-                      _buildDatePicker(),
+                      _buildDatePicker(appointmentProvider),
                       const SizedBox(height: 10),
-                      _buildTimePicker(),
+                      _buildTimePicker(appointmentProvider),
                     ],
                   ),
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: HorizontalBtn(
-                text: 'Make Appointment',
-                nextScreen: const AppointmentDetailsScreen(),
-                onPressed: () {},
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: HorizontalBtn(
+                  text: 'Make Appointment',
+                  nextScreen: const AppointmentDetailsScreen(),
+                  enabled: appointmentProvider.selectedTime.isNotEmpty &&
+                      appointmentProvider.selectedDate != DateTime(0),
+                  onPressed: () {},
+                ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDatePicker(AppointmentProvider provider) {
+    final weekDays = _generateWeekDays();
+    return CarouselSlider.builder(
+      itemCount: weekDays.length,
+      options: CarouselOptions(
+        height: 80,
+        viewportFraction: 0.3,
+        enlargeCenterPage: true,
+        enlargeFactor: 0.3,
+        onPageChanged: (index, reason) {
+          provider.setSelectedDate(weekDays[index]);
+        },
+      ),
+      itemBuilder: (context, index, realIndex) {
+        final date = weekDays[index];
+        final isSelected = provider.selectedDate.day == date.day;
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          child: OutlinedButton(
+            onPressed: () => provider.setSelectedDate(date),
+            style: OutlinedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              backgroundColor:
+                  isSelected ? customLightBlue : Colors.transparent,
+              side: BorderSide(
+                color: isSelected ? customBlue : Colors.grey.shade300,
+                width: isSelected ? 2.0 : 1.0,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  DateFormat('EEE').format(date),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isSelected ? customBlue : Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  DateFormat('d MMM').format(date),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isSelected ? customBlue : Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTimePicker(AppointmentProvider provider) {
+    final timeSlots = _generateTimeSlots();
+    return CarouselSlider.builder(
+      itemCount: timeSlots.length,
+      options: CarouselOptions(
+        height: 60,
+        viewportFraction: 0.3,
+        enlargeCenterPage: true,
+        onPageChanged: (index, reason) {
+          provider.setSelectedTime(timeSlots[index]);
+        },
+      ),
+      itemBuilder: (context, index, realIndex) {
+        bool isSelected = provider.selectedTime == timeSlots[index];
+        return OutlinedButton(
+          onPressed: () => provider.setSelectedTime(timeSlots[index]),
+          style: OutlinedButton.styleFrom(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            backgroundColor: isSelected ? customLightBlue : Colors.transparent,
+            side: BorderSide(
+              color: isSelected ? customBlue : Colors.grey.shade300,
+              width: isSelected ? 2.0 : 1.0,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+          child: Text(
+            timeSlots[index],
+            style: TextStyle(
+              fontSize: 16,
+              color: isSelected ? customBlue : Colors.black,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -140,88 +241,6 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
                 fontWeight: FontWeight.bold, color: customBlue)),
         Text(label, style: const TextStyle(color: Colors.grey)),
       ],
-    );
-  }
-
-  Widget _buildDatePicker() {
-    final weekDays = _generateWeekDays();
-    return CarouselSlider.builder(
-      itemCount: weekDays.length,
-      options: CarouselOptions(
-        height: 80,
-        viewportFraction: 0.3,
-        enlargeCenterPage: true,
-        onPageChanged: (index, reason) {
-          setState(() => _selectedDateIndex = index);
-        },
-      ),
-      itemBuilder: (context, index, realIndex) {
-        return _buildDateButton(weekDays[index], index);
-      },
-    );
-  }
-
-  Widget _buildTimePicker() {
-    final timeSlots = _generateTimeSlots();
-    return CarouselSlider.builder(
-      itemCount: timeSlots.length,
-      options: CarouselOptions(
-        height: 60,
-        viewportFraction: 0.3,
-        enlargeCenterPage: true,
-        onPageChanged: (index, reason) {
-          setState(() => _selectedTimeIndex = index);
-        },
-      ),
-      itemBuilder: (context, index, realIndex) {
-        return _buildTimeButton(timeSlots[index], index == _selectedTimeIndex);
-      },
-    );
-  }
-
-  Widget _buildDateButton(DateTime date, int index) {
-    bool isSelected = index == _selectedDateIndex;
-    return OutlinedButton(
-      onPressed: () {
-        setState(() => _selectedDateIndex = index);
-      },
-      style: OutlinedButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        side:
-            BorderSide(color: isSelected ? customBlue : Colors.grey, width: 2),
-        backgroundColor: isSelected ? customLightBlue : Colors.transparent,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(DateFormat('EEE').format(date),
-              style: const TextStyle(fontSize: 14, color: Colors.grey)),
-          const SizedBox(height: 4),
-          Text(DateFormat('d MMM').format(date),
-              style: const TextStyle(fontSize: 16, color: Colors.black)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTimeButton(String time, bool isSelected) {
-    return OutlinedButton(
-      onPressed: () {
-        setState(() {
-          _selectedTimeIndex = _generateTimeSlots().indexOf(time);
-        });
-      },
-      style: OutlinedButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        side:
-            BorderSide(color: isSelected ? customBlue : Colors.grey, width: 2),
-        backgroundColor: isSelected ? customLightBlue : Colors.transparent,
-      ),
-      child: Text(
-        time,
-        style: TextStyle(
-            fontSize: 16, color: isSelected ? customBlue : Colors.black),
-      ),
     );
   }
 }

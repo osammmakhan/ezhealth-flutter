@@ -46,6 +46,7 @@ dependencies:
   cloud_firestore_web: ^4.3.0 # REMOVE this for mobile builds
   flutter_svg: ^2.0.10+1
   smooth_page_indicator: ^1.2.0+3
+  provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:
