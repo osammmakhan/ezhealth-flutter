@@ -33,9 +33,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      // TODO: Uncomment the following line when the app is ready
-
-      // debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: false,
       home: OnboardingScreen(),
     );
   }
