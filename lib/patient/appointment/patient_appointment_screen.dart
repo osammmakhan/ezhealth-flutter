@@ -31,51 +31,73 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
   @override
   Widget build(BuildContext context) {
     final appointmentProvider = Provider.of<AppointmentProvider>(context);
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 600;
+    final isMediumScreen = screenSize.width >= 600 && screenSize.width < 1024;
+    final isLargeScreen = screenSize.width >= 1024;
 
     return Scaffold(
       body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen
+                        ? 16.0
+                        : isMediumScreen
+                            ? 24.0
+                            : 32.0,
+                    vertical: isSmallScreen ? 16.0 : 24.0,
+                  ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDoctorInfo(),
-                      const SizedBox(height: 60),
+                      _buildResponsiveDoctorInfo(isSmallScreen, isMediumScreen),
+                      SizedBox(
+                          height: isSmallScreen
+                              ? 40
+                              : isMediumScreen
+                                  ? 60
+                                  : 80),
                       const Divider(
                           color: Colors.grey, indent: 20, endIndent: 20),
                       const SizedBox(height: 24),
-                      _buildStats(),
-                      const SizedBox(height: 50),
-                      const Text(
+                      _buildResponsiveStats(isSmallScreen, isMediumScreen),
+                      SizedBox(height: isSmallScreen ? 30 : 50),
+                      Text(
                         'Book Appointment',
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                          fontSize: isSmallScreen ? 16 : 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      const SizedBox(height: 50),
-                      _buildDatePicker(appointmentProvider),
+                      SizedBox(height: isSmallScreen ? 30 : 50),
+                      _buildDatePicker(
+                          appointmentProvider, isSmallScreen, isMediumScreen),
                       const SizedBox(height: 10),
-                      _buildTimePicker(appointmentProvider),
+                      _buildTimePicker(
+                          appointmentProvider, isSmallScreen, isMediumScreen),
                     ],
                   ),
                 ),
               ),
             ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: HorizontalBtn(
-                  text: 'Make Appointment',
-                  nextScreen: const AppointmentDetailsScreen(),
-                  enabled: appointmentProvider.selectedTime.isNotEmpty &&
-                      appointmentProvider.selectedDate != DateTime(0),
-                  onPressed: () {},
-                ),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmallScreen
+                    ? 16
+                    : isMediumScreen
+                        ? 24
+                        : 32,
+                vertical: isSmallScreen ? 16 : 24,
+              ),
+              child: HorizontalBtn(
+                text: 'Make Appointment',
+                nextScreen: const AppointmentDetailsScreen(),
+                enabled: appointmentProvider.selectedTime.isNotEmpty &&
+                    appointmentProvider.selectedDate != DateTime(0),
+                onPressed: () {},
               ),
             ),
           ],
@@ -84,15 +106,136 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     );
   }
 
-  Widget _buildDatePicker(AppointmentProvider provider) {
+  Widget _buildResponsiveDoctorInfo(bool isSmallScreen, bool isMediumScreen) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (isSmallScreen) {
+          return Column(
+            children: [
+              const CircleAvatar(
+                backgroundImage:
+                    AssetImage('lib/assets/images/Doctor Profile Picture.png'),
+                radius: 60,
+              ),
+              const SizedBox(height: 16),
+              _buildDoctorDetails(),
+            ],
+          );
+        } else {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                backgroundImage: const AssetImage(
+                    'lib/assets/images/Doctor Profile Picture.png'),
+                radius: isMediumScreen ? 60 : 70,
+              ),
+              const SizedBox(width: 24),
+              _buildDoctorDetails(),
+            ],
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildDoctorDetails() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Text(
+          'Dr. Osama Khan',
+          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        const Text(
+          'Dentist',
+          style: TextStyle(fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.location_on, size: 16, color: customBlue),
+            Text('Hyderabad, Pakistan', style: TextStyle(color: Colors.grey)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResponsiveStats(bool isSmallScreen, bool isMediumScreen) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildStatItem(Icons.group, '7,500+', 'Patients', isSmallScreen),
+        _buildStatItem(Icons.work, '10+', 'Years Exp.', isSmallScreen),
+        _buildStatItem(Icons.star, '4.9', 'Ratings', isSmallScreen),
+        _buildStatItem(Icons.chat, '4,956', 'Reviews', isSmallScreen),
+      ],
+    );
+  }
+
+  Widget _buildStatItem(
+      IconData icon, String value, String label, bool isSmallScreen) {
+    return Container(
+      width: isSmallScreen ? 80 : 100,
+      child: Column(
+        children: [
+          Container(
+            width: isSmallScreen ? 40 : 50,
+            height: isSmallScreen ? 40 : 50,
+            decoration: const BoxDecoration(
+              color: customLightBlue,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child:
+                  Icon(icon, color: customBlue, size: isSmallScreen ? 20 : 24),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: customBlue,
+              fontSize: isSmallScreen ? 14 : 16,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: isSmallScreen ? 12 : 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDatePicker(
+      AppointmentProvider provider, bool isSmallScreen, bool isMediumScreen) {
     final weekDays = _generateWeekDays();
+
     return CarouselSlider.builder(
       itemCount: weekDays.length,
       options: CarouselOptions(
-        height: 80,
-        viewportFraction: 0.3,
+        height: isSmallScreen
+            ? 70
+            : isMediumScreen
+                ? 80
+                : 100,
+        viewportFraction: isSmallScreen
+            ? 0.35
+            : isMediumScreen
+                ? 0.25
+                : 0.2,
         enlargeCenterPage: true,
-        enlargeFactor: 0.3,
+        enlargeFactor: isSmallScreen ? 0.2 : 0.3,
         onPageChanged: (index, reason) {
           provider.setSelectedDate(weekDays[index]);
         },
@@ -101,7 +244,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
         final date = weekDays[index];
         final isSelected = provider.selectedDate.day == date.day;
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
+          margin: EdgeInsets.symmetric(horizontal: isSmallScreen ? 2 : 4),
           child: OutlinedButton(
             onPressed: () => provider.setSelectedDate(date),
             style: OutlinedButton.styleFrom(
@@ -113,7 +256,10 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
                 color: isSelected ? customBlue : Colors.grey.shade300,
                 width: isSelected ? 2.0 : 1.0,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmallScreen ? 8 : 12,
+                vertical: isSmallScreen ? 4 : 8,
+              ),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -121,7 +267,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
                 Text(
                   DateFormat('EEE').format(date),
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: isSmallScreen ? 12 : 14,
                     color: isSelected ? customBlue : Colors.grey,
                   ),
                 ),
@@ -129,7 +275,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
                 Text(
                   DateFormat('d MMM').format(date),
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: isSmallScreen ? 14 : 16,
                     color: isSelected ? customBlue : Colors.black,
                   ),
                 ),
@@ -141,13 +287,23 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     );
   }
 
-  Widget _buildTimePicker(AppointmentProvider provider) {
+  Widget _buildTimePicker(
+      AppointmentProvider provider, bool isSmallScreen, bool isMediumScreen) {
     final timeSlots = _generateTimeSlots();
+
     return CarouselSlider.builder(
       itemCount: timeSlots.length,
       options: CarouselOptions(
-        height: 60,
-        viewportFraction: 0.3,
+        height: isSmallScreen
+            ? 50
+            : isMediumScreen
+                ? 60
+                : 80,
+        viewportFraction: isSmallScreen
+            ? 0.35
+            : isMediumScreen
+                ? 0.25
+                : 0.2,
         enlargeCenterPage: true,
         onPageChanged: (index, reason) {
           provider.setSelectedTime(timeSlots[index]);
@@ -165,82 +321,20 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
               color: isSelected ? customBlue : Colors.grey.shade300,
               width: isSelected ? 2.0 : 1.0,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 12 : 16,
+              vertical: isSmallScreen ? 8 : 12,
+            ),
           ),
           child: Text(
             timeSlots[index],
             style: TextStyle(
-              fontSize: 16,
+              fontSize: isSmallScreen ? 14 : 16,
               color: isSelected ? customBlue : Colors.black,
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildDoctorInfo() {
-    return const Row(
-      children: [
-        CircleAvatar(
-          backgroundImage:
-              AssetImage('lib/assets/images/Doctor Profile Picture.png'),
-          minRadius: 70,
-        ),
-        SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Dr. Osama Khan',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-            ),
-            Text('Dentist', style: TextStyle(fontSize: 16)),
-            Row(
-              children: [
-                Icon(Icons.location_on, size: 16, color: customBlue),
-                Text('Hyderabad, Pakistan',
-                    style: TextStyle(color: Colors.grey)),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStats() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildStatItem(Icons.group, '7,500+', 'Patients'),
-        _buildStatItem(Icons.work, '10+', 'Years Exp.'),
-        _buildStatItem(Icons.star, '4.9', 'Ratings'),
-        _buildStatItem(Icons.chat, '4,956', 'Reviews'),
-      ],
-    );
-  }
-
-  Widget _buildStatItem(IconData icon, String value, String label) {
-    return Column(
-      children: [
-        Container(
-          width: 50,
-          height: 50,
-          decoration: const BoxDecoration(
-            color: customLightBlue,
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Icon(icon, color: customBlue, size: 24),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(value,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, color: customBlue)),
-        Text(label, style: const TextStyle(color: Colors.grey)),
-      ],
     );
   }
 }

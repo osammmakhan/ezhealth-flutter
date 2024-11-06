@@ -18,47 +18,59 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen size
+    final Size screenSize = MediaQuery.of(context).size;
+    final double verticalPadding = screenSize.height * 0.05;
+
     return Scaffold(
-      body: Stack(
-        children: [
-          PageView(
-            controller: _controller,
-            children: const [
-              OnBoardingPage(
+      body: SafeArea(
+        // Add SafeArea
+        child: Stack(
+          children: [
+            PageView(
+              controller: _controller,
+              children: const [
+                OnBoardingPage(
+                    svgImage:
+                        'lib/assets/images/onboarding-assets/Doctor Checkup.svg',
+                    imageLabel: 'Image 1',
+                    displayText1: 'Discover\t',
+                    textColor1: Colors.black,
+                    displayText2: 'Experienced\nDoctors',
+                    textColor2: customBlue,
+                    descriptionText:
+                        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper'),
+                OnBoardingPage(
+                    svgImage:
+                        'lib/assets/images/onboarding-assets/Medical Team.svg',
+                    imageLabel: 'Image 2',
+                    displayText1: 'Learn About\t',
+                    textColor1: customBlue,
+                    displayText2: 'Your\nDoctors',
+                    textColor2: Colors.black,
+                    descriptionText:
+                        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper'),
+                OnBoardingPage(
                   svgImage:
-                      'lib/assets/images/onboarding-assets/Doctor Checkup.svg',
-                  imageLabel: 'Image 1',
-                  displayText1: 'Discover\t',
+                      'lib/assets/images/onboarding-assets/Calendar Guy.svg',
+                  imageLabel: 'Image 3',
+                  displayText1: 'Effortless\t',
                   textColor1: Colors.black,
-                  displayText2: 'Experienced\nDoctors',
+                  displayText2: 'Appointment\nBooking',
                   textColor2: customBlue,
                   descriptionText:
-                      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper'),
-              OnBoardingPage(
-                  svgImage:
-                      'lib/assets/images/onboarding-assets/Medical Team.svg',
-                  imageLabel: 'Image 2',
-                  displayText1: 'Learn About\t',
-                  textColor1: customBlue,
-                  displayText2: 'Your\nDoctors',
-                  textColor2: Colors.black,
-                  descriptionText:
-                      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper'),
-              OnBoardingPage(
-                svgImage:
-                    'lib/assets/images/onboarding-assets/Calendar Guy.svg',
-                imageLabel: 'Image 3',
-                displayText1: 'Effortless\t',
-                textColor1: Colors.black,
-                displayText2: 'Appointment\nBooking',
-                textColor2: customBlue,
-                descriptionText:
-                    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper',
-              ),
-            ],
-          ),
-          DotIndicator(controller: _controller),
-        ],
+                      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper',
+                ),
+              ],
+            ),
+            Positioned(
+              bottom: verticalPadding, // Dynamic bottom padding
+              left: 0,
+              right: 0,
+              child: DotIndicator(controller: _controller),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -85,32 +97,48 @@ class OnBoardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Expanded(
-          flex: 3,
-          child: SvgImage(
-            svgImage: svgImage,
-            imageLabel: imageLabel,
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Column(
-            children: [
-              Heading(
-                displayText1: displayText1,
-                textColor1: textColor1,
-                displayText2: displayText2,
-                textColor2: textColor2,
+    final Size screenSize = MediaQuery.of(context).size;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: screenSize.width * 0.05,
+        vertical: screenSize.height * 0.02,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: screenSize.width * 0.8,
+                  maxHeight: screenSize.height * 0.4,
+                ),
+                child: SvgImage(
+                  svgImage: svgImage,
+                  imageLabel: imageLabel,
+                ),
               ),
-              const SizedBox(height: 20),
-              SubHeading(descriptionText: descriptionText),
-            ],
+            ),
           ),
-        ),
-      ],
+          Expanded(
+            flex: 2,
+            child: Column(
+              children: [
+                Heading(
+                  displayText1: displayText1,
+                  textColor1: textColor1,
+                  displayText2: displayText2,
+                  textColor2: textColor2,
+                ),
+                const SizedBox(height: 20),
+                SubHeading(descriptionText: descriptionText),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -131,6 +159,8 @@ class Heading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double fontSize = MediaQuery.of(context).size.width * 0.06;
+
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
@@ -139,14 +169,14 @@ class Heading extends StatelessWidget {
             text: displayText1,
             style: TextStyle(
               color: textColor1,
-              fontSize: 26,
+              fontSize: fontSize, // Dynamic font size
               fontWeight: FontWeight.bold,
             ),
           ),
           TextSpan(
             text: displayText2,
             style: TextStyle(
-              fontSize: 26,
+              fontSize: fontSize, // Dynamic font size
               color: textColor2,
               fontWeight: FontWeight.bold,
             ),
@@ -167,13 +197,17 @@ class SubHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double fontSize = MediaQuery.of(context).size.width * 0.04;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 40),
+      padding: EdgeInsets.symmetric(
+        horizontal: MediaQuery.of(context).size.width * 0.1,
+      ),
       child: Text(
         descriptionText,
         textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 16,
+        style: TextStyle(
+          fontSize: fontSize, // Dynamic font size
         ),
       ),
     );
@@ -245,6 +279,8 @@ class _DotIndicatorState extends State<DotIndicator> {
             CustomNavigationButton(
               icon: Icons.arrow_back_ios,
               isFilled: false,
+              padding: const EdgeInsets.only(
+                  left: 5), // Adjust this value between 4-6
               onPressed: () {
                 widget._controller.previousPage(
                   duration: const Duration(milliseconds: 300),
@@ -283,33 +319,45 @@ class CustomNavigationButton extends StatelessWidget {
   final IconData icon;
   final bool isFilled;
   final VoidCallback? onPressed;
+  final EdgeInsets? padding; // Add this parameter
 
   const CustomNavigationButton({
     super.key,
     required this.icon,
     required this.isFilled,
     required this.onPressed,
+    this.padding, // Add this parameter
   });
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        shape: const CircleBorder(),
-        padding: const EdgeInsets.all(20),
-        backgroundColor: isFilled ? customBlue : Colors.white,
-        side: const BorderSide(
-          color: customBlue,
-          width: 2,
+    final double buttonSize = MediaQuery.of(context).size.width * 0.12;
+
+    return SizedBox(
+      width: buttonSize,
+      height: buttonSize,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          shape: const CircleBorder(),
+          padding: EdgeInsets.all(buttonSize * 0.25),
+          backgroundColor: isFilled ? customBlue : Colors.white,
+          side: const BorderSide(
+            color: customBlue,
+            width: 2,
+          ),
+          elevation: isFilled ? 2 : 0,
         ),
-        elevation: isFilled ? 2 : 0,
-      ),
-      child: Center(
-        child: Icon(
-          icon,
-          color: isFilled ? Colors.white : customBlue,
-          size: 24,
+        child: Center(
+          child: Padding(
+            padding:
+                padding ?? EdgeInsets.zero, // Apply the padding if provided
+            child: Icon(
+              icon,
+              color: isFilled ? Colors.white : customBlue,
+              size: buttonSize * 0.5,
+            ),
+          ),
         ),
       ),
     );

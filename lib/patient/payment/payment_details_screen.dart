@@ -95,6 +95,8 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final paymentProvider = Provider.of<PaymentProvider>(context);
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 600;
 
     return Scaffold(
       appBar: AppBar(
@@ -107,189 +109,221 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
         backgroundColor: customBlue,
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 200,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF1E2F97), Color(0xFF0165FC)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Image.asset(
-                                  'lib/assets/images/paymentmethod-assets/chip.png',
-                                  height: 40,
-                                  width: 40),
-                              Image.asset(
-                                  'lib/assets/images/paymentmethod-assets/mastercard_logo.png',
-                                  height: 40,
-                                  width: 40),
-                            ],
-                          ),
-                          Text(
-                            paymentProvider.cardNumber.isEmpty
-                                ? '**** **** **** ****'
-                                : paymentProvider.cardNumber,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                letterSpacing: 2),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('CARD HOLDER',
-                                      style: TextStyle(
-                                          color: Colors.white60, fontSize: 12)),
-                                  Text(
-                                    paymentProvider.cardHolderName.isEmpty
-                                        ? 'Your Name'
-                                        : paymentProvider.cardHolderName
-                                            .toUpperCase(),
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 16),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('EXPIRES',
-                                      style: TextStyle(
-                                          color: Colors.white60, fontSize: 12)),
-                                  Text(
-                                    paymentProvider.expiryDate.isEmpty
-                                        ? 'MM/YY'
-                                        : paymentProvider.expiryDate,
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 16),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    TextFormField(
-                      controller: _cardNumberController,
-                      decoration: const InputDecoration(
-                        labelText: 'Card Number',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.credit_card),
-                      ),
-                      keyboardType: TextInputType.number,
-                      maxLength: 19,
-                      onChanged: (value) {
-                        final formatted = _formatCardNumber(value);
-                        paymentProvider.setCardNumber(formatted);
-                        _cardNumberController.value = TextEditingValue(
-                          text: formatted,
-                          selection:
-                              TextSelection.collapsed(offset: formatted.length),
-                        );
-                      },
-                      validator: _validateCardNumber,
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: isSmallScreen ? double.infinity : 600,
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(isSmallScreen ? 16.0 : 24.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _expiryController,
-                            decoration: const InputDecoration(
-                              labelText: 'MM/YY',
-                              border: OutlineInputBorder(),
+                        Container(
+                          height: isSmallScreen ? 200 : 250,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF1E2F97), Color(0xFF0165FC)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            keyboardType: TextInputType.number,
-                            maxLength: 5,
-                            onChanged: (value) {
-                              // Auto-format MM/YY
-                              if (value.length == 2 && !value.contains('/')) {
-                                value = '$value/';
-                                _expiryController.value = TextEditingValue(
-                                  text: value,
-                                  selection: TextSelection.collapsed(
-                                      offset: value.length),
-                                );
-                              }
-                              paymentProvider.setExpiryDate(value);
-                            },
-                            validator: _validateExpiryDate,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: EdgeInsets.all(isSmallScreen ? 20 : 30),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Image.asset(
+                                      'lib/assets/images/paymentmethod-assets/chip.png',
+                                      height: 40,
+                                      width: 40),
+                                  Image.asset(
+                                      'lib/assets/images/paymentmethod-assets/mastercard_logo.png',
+                                      height: 40,
+                                      width: 40),
+                                ],
+                              ),
+                              Text(
+                                paymentProvider.cardNumber.isEmpty
+                                    ? '**** **** **** ****'
+                                    : paymentProvider.cardNumber,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    letterSpacing: 2),
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('CARD HOLDER',
+                                          style: TextStyle(
+                                              color: Colors.white60,
+                                              fontSize: 12)),
+                                      Text(
+                                        paymentProvider.cardHolderName.isEmpty
+                                            ? 'Your Name'
+                                            : paymentProvider.cardHolderName
+                                                .toUpperCase(),
+                                        style: const TextStyle(
+                                            color: Colors.white, fontSize: 16),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('EXPIRES',
+                                          style: TextStyle(
+                                              color: Colors.white60,
+                                              fontSize: 12)),
+                                      Text(
+                                        paymentProvider.expiryDate.isEmpty
+                                            ? 'MM/YY'
+                                            : paymentProvider.expiryDate,
+                                        style: const TextStyle(
+                                            color: Colors.white, fontSize: 16),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _cvvController,
-                            decoration: const InputDecoration(
-                              labelText: 'CVV',
-                              border: OutlineInputBorder(),
-                            ),
-                            keyboardType: TextInputType.number,
-                            maxLength: 3,
-                            onChanged: paymentProvider.setCVV,
-                            validator: _validateCVV,
-                          ),
-                        ),
+                        SizedBox(height: isSmallScreen ? 30 : 40),
+                        _buildResponsiveFormFields(
+                            isSmallScreen, paymentProvider),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Card Holder Name',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.text,
-                      textCapitalization: TextCapitalization.words,
-                      onChanged: paymentProvider.setCardHolderName,
-                      validator: _validateCardHolderName,
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+              Padding(
+                padding: EdgeInsets.all(isSmallScreen ? 16.0 : 24.0),
+                child: HorizontalBtn(
+                  text: 'Pay & Confirm',
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ConfirmationScreen(),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
-          HorizontalBtn(
-            text: 'Pay & Confirm',
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ConfirmationScreen(),
-                  ),
-                );
-              }
-            },
-          ),
-        ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildResponsiveFormFields(
+      bool isSmallScreen, PaymentProvider paymentProvider) {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _cardNumberController,
+          decoration: InputDecoration(
+            labelText: 'Card Number',
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.credit_card),
+            contentPadding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+          ),
+          style: TextStyle(fontSize: isSmallScreen ? 16 : 18),
+          keyboardType: TextInputType.number,
+          maxLength: 19,
+          onChanged: (value) {
+            final formatted = _formatCardNumber(value);
+            paymentProvider.setCardNumber(formatted);
+            _cardNumberController.value = TextEditingValue(
+              text: formatted,
+              selection: TextSelection.collapsed(offset: formatted.length),
+            );
+          },
+          validator: _validateCardNumber,
+        ),
+        SizedBox(height: isSmallScreen ? 20 : 30),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _expiryController,
+                decoration: InputDecoration(
+                  labelText: 'MM/YY',
+                  border: const OutlineInputBorder(),
+                  contentPadding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+                ),
+                style: TextStyle(fontSize: isSmallScreen ? 16 : 18),
+                keyboardType: TextInputType.number,
+                maxLength: 5,
+                onChanged: (value) {
+                  // Auto-format MM/YY
+                  if (value.length == 2 && !value.contains('/')) {
+                    value = '$value/';
+                    _expiryController.value = TextEditingValue(
+                      text: value,
+                      selection: TextSelection.collapsed(offset: value.length),
+                    );
+                  }
+                  paymentProvider.setExpiryDate(value);
+                },
+                validator: _validateExpiryDate,
+              ),
+            ),
+            SizedBox(width: isSmallScreen ? 20 : 30),
+            Expanded(
+              child: TextFormField(
+                controller: _cvvController,
+                decoration: InputDecoration(
+                  labelText: 'CVV',
+                  border: const OutlineInputBorder(),
+                  contentPadding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+                ),
+                style: TextStyle(fontSize: isSmallScreen ? 16 : 18),
+                keyboardType: TextInputType.number,
+                maxLength: 3,
+                onChanged: paymentProvider.setCVV,
+                validator: _validateCVV,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: isSmallScreen ? 20 : 30),
+        TextFormField(
+          controller: _nameController,
+          decoration: InputDecoration(
+            labelText: 'Card Holder Name',
+            border: const OutlineInputBorder(),
+            contentPadding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+          ),
+          style: TextStyle(fontSize: isSmallScreen ? 16 : 18),
+          keyboardType: TextInputType.text,
+          textCapitalization: TextCapitalization.words,
+          onChanged: paymentProvider.setCardHolderName,
+          validator: _validateCardHolderName,
+        ),
+      ],
     );
   }
 }
