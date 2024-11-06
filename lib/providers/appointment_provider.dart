@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class AppointmentProvider with ChangeNotifier {
   // Home Screen State
   int _selectedIndex = 1;
+  bool _hasAppointment = false;
 
   // Appointment State
   DateTime _selectedDate = DateTime.now();
@@ -22,6 +23,7 @@ class AppointmentProvider with ChangeNotifier {
 
   // Home Screen Getters
   int get selectedIndex => _selectedIndex;
+  bool get hasAppointment => _hasAppointment;
 
   // Appointment Getters
   DateTime get selectedDate => _selectedDate;
@@ -49,6 +51,11 @@ class AppointmentProvider with ChangeNotifier {
   // Home Screen Methods
   void setSelectedIndex(int index) {
     _selectedIndex = index;
+    notifyListeners();
+  }
+
+  void setHasAppointment(bool value) {
+    _hasAppointment = value;
     notifyListeners();
   }
 

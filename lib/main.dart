@@ -4,7 +4,6 @@ import 'onboarding_screen.dart';
 import 'package:provider/provider.dart';
 import 'providers/appointment_provider.dart';
 import 'providers/payment_provider.dart';
-import 'providers/home_screen_provider.dart';
 import 'secret.dart';
 
 Future<void> main() async {
@@ -22,7 +21,6 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AppointmentProvider()),
         ChangeNotifierProvider(create: (_) => PaymentProvider()),
-        ChangeNotifierProvider(create: (_) => HomeScreenProvider()),
       ],
       child: MyApp(),
     ),

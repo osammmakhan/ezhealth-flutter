@@ -140,20 +140,20 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
   }
 
   Widget _buildDoctorDetails() {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Text(
+        Text(
           'Dr. Osama Khan',
           style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
-        const Text(
+        Text(
           'Dentist',
           style: TextStyle(fontSize: 16),
           textAlign: TextAlign.center,
         ),
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.location_on, size: 16, color: customBlue),
