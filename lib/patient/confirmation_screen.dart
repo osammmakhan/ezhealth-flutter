@@ -10,32 +10,44 @@ class ConfirmationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appointmentProvider = Provider.of<AppointmentProvider>(context, listen: false);
+    final appointmentProvider =
+        Provider.of<AppointmentProvider>(context, listen: false);
 
     // Make sure the appointment time is set
     if (appointmentProvider.selectedTime.isEmpty) {
       appointmentProvider.setSelectedTime('Your selected time here');
     }
 
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 600;
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 40),
-                _buildSuccessIcon(),
-                const SizedBox(height: 30),
-                _buildHeader(),
-                const SizedBox(height: 40),
-                _buildAppointmentCard(
-                  appointmentProvider: appointmentProvider,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: isSmallScreen ? double.infinity : 600,
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(isSmallScreen ? 20.0 : 32.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(height: isSmallScreen ? 40 : 60),
+                    _buildSuccessIcon(isSmallScreen),
+                    SizedBox(height: isSmallScreen ? 30 : 40),
+                    _buildHeader(isSmallScreen),
+                    SizedBox(height: isSmallScreen ? 40 : 50),
+                    _buildAppointmentCard(
+                      appointmentProvider: appointmentProvider,
+                      isSmallScreen: isSmallScreen,
+                    ),
+                    SizedBox(height: isSmallScreen ? 40 : 50),
+                    _buildDoneButton(context),
+                  ],
                 ),
-                const SizedBox(height: 40),
-                _buildDoneButton(context),
-              ],
+              ),
             ),
           ),
         ),
@@ -43,10 +55,10 @@ class ConfirmationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSuccessIcon() {
+  Widget _buildSuccessIcon(bool isSmallScreen) {
     return Container(
-      width: 100,
-      height: 100,
+      width: isSmallScreen ? 100 : 120,
+      height: isSmallScreen ? 100 : 120,
       decoration: BoxDecoration(
         color: customLightBlue,
         shape: BoxShape.circle,
@@ -59,35 +71,38 @@ class ConfirmationScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: const Icon(
+      child: Icon(
         Icons.check_circle,
         color: customBlue,
-        size: 60,
+        size: isSmallScreen ? 60 : 72,
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(bool isSmallScreen) {
     return Column(
       children: [
-        const Text(
+        Text(
           'Appointment Confirmed!',
           style: TextStyle(
-            fontSize: 24,
+            fontSize: isSmallScreen ? 24 : 28,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 10),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 16 : 24,
+              vertical: isSmallScreen ? 8 : 12
+              ),
           decoration: BoxDecoration(
             color: customLightBlue,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Text(
+          child: Text(
             'PKR 500',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: isSmallScreen ? 24 : 28,
               fontWeight: FontWeight.bold,
               color: customBlue,
             ),
@@ -99,6 +114,7 @@ class ConfirmationScreen extends StatelessWidget {
 
   Widget _buildAppointmentCard({
     required AppointmentProvider appointmentProvider,
+    required bool isSmallScreen,
   }) {
     return Card(
       elevation: 4,
@@ -106,57 +122,61 @@ class ConfirmationScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(15),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(isSmallScreen ? 20 : 28),
         child: Column(
           children: [
-            _buildDoctorInfo(),
-            const SizedBox(height: 24),
-            _buildDetailRow('Date',
+            _buildDoctorInfo(isSmallScreen),
+            SizedBox(height: isSmallScreen ? 24 : 32),
+            _buildDetailRow(
+                'Date',
                 '${appointmentProvider.selectedDate.day.toString().padLeft(2, '0')}-'
-                '${appointmentProvider.selectedDate.month.toString().padLeft(2, '0')}-'
-                '${appointmentProvider.selectedDate.year}'),
-            const SizedBox(height: 15),
-            _buildDetailRow('Time', appointmentProvider.selectedTime),
-            const SizedBox(height: 15),
-            _buildDetailRow('Location', 'Hyderabad, Pakistan'),
-            const Divider(height: 30),
-            _buildDetailRow('Reference Number', appointmentProvider.referenceNumber),
-            const SizedBox(height: 15),
-            _buildDetailRow('Ticket Token', appointmentProvider.appointmentId),
+                    '${appointmentProvider.selectedDate.month.toString().padLeft(2, '0')}-'
+                    '${appointmentProvider.selectedDate.year}',
+                    isSmallScreen),
+            SizedBox(height: isSmallScreen ? 15 : 20),
+            _buildDetailRow('Time', appointmentProvider.selectedTime, isSmallScreen),
+            SizedBox(height: isSmallScreen ? 15 : 20),
+            _buildDetailRow('Location', 'Hyderabad, Pakistan', isSmallScreen),
+            Divider(height: isSmallScreen ? 30 : 40),
+            _buildDetailRow(
+                'Reference Number', appointmentProvider.referenceNumber, isSmallScreen),
+            SizedBox(height: isSmallScreen ? 15 : 20),
+            _buildDetailRow(
+                'Ticket Token', appointmentProvider.appointmentId, isSmallScreen),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDoctorInfo() {
+  Widget _buildDoctorInfo(bool isSmallScreen) {
     return Row(
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Image.asset(
             'lib/assets/images/Doctor Profile Picture.png',
-            width: 60,
-            height: 60,
+            width: isSmallScreen ? 60 : 80,
+            height: isSmallScreen ? 60 : 80,
             fit: BoxFit.cover,
           ),
         ),
-        const SizedBox(width: 16),
-        const Expanded(
+        SizedBox(width: isSmallScreen ? 16 : 24),
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Dr. Osama Khan',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: isSmallScreen ? 18 : 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              SizedBox(height: isSmallScreen ? 4 : 8),
               Row(
                 children: [
-                  Icon(Icons.star, color: Colors.amber, size: 16),
+                  Icon(Icons.star, color: Colors.amber, size: isSmallScreen ? 16 : 20 ),
                   Text(
                     ' 4.9',
                     style: TextStyle(
@@ -168,6 +188,7 @@ class ConfirmationScreen extends StatelessWidget {
                     style: TextStyle(
                       color: customBlue,
                       fontWeight: FontWeight.bold,
+                      fontSize: isSmallScreen ? 14 : 16,
                     ),
                   ),
                 ],
@@ -179,7 +200,7 @@ class ConfirmationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String value, bool isSmallScreen) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -187,14 +208,14 @@ class ConfirmationScreen extends StatelessWidget {
           label,
           style: TextStyle(
             color: Colors.grey[600],
-            fontSize: 16,
+            fontSize: isSmallScreen ? 16 : 18,
           ),
         ),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 16,
+            fontSize: isSmallScreen ? 16 : 18,
           ),
         ),
       ],
@@ -205,7 +226,8 @@ class ConfirmationScreen extends StatelessWidget {
     return HorizontalBtn(
       onPressed: () {
         // Get the provider but DON'T generate a new appointment ID
-        final provider = Provider.of<AppointmentProvider>(context, listen: false);
+        final provider =
+            Provider.of<AppointmentProvider>(context, listen: false);
 
         // Add a print statement to verify the state
         print('Appointment ID: ${provider.appointmentId}');
