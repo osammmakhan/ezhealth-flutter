@@ -5,17 +5,17 @@ import 'package:provider/provider.dart';
 import 'providers/appointment_provider.dart';
 import 'providers/payment_provider.dart';
 import 'providers/home_screen_provider.dart';
+import 'secret.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
-      options: const FirebaseOptions(
-          // TODO: Hide these before making the project public
-          apiKey: "AIzaSyAypF89ApLUkusAtx1ersR1a4pn4x-xzgo",
-          appId: "1:735235674573:android:21818f171c0113be5ff484",
-          messagingSenderId: "735235674573",
-          projectId: "ezhealth-32082"));
+      options: FirebaseOptions(
+          apiKey: Secret().apiKey,
+          appId: Secret().appId,
+          messagingSenderId: Secret().messagingSenderId,
+          projectId: Secret().projectId));
 
   runApp(
     MultiProvider(

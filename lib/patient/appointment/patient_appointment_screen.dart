@@ -34,7 +34,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 600;
     final isMediumScreen = screenSize.width >= 600 && screenSize.width < 1024;
-    final isLargeScreen = screenSize.width >= 1024;
+    // final isLargeScreen = screenSize.width >= 1024;
 
     return Scaffold(
       body: SafeArea(
