@@ -53,7 +53,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
                   ),
                   child: Column(
                     children: [
-                      _buildResponsiveDoctorInfo(isSmallScreen, isMediumScreen),
+                      _buildDoctorInfo(isSmallScreen, isMediumScreen),
                       SizedBox(
                           height: isSmallScreen
                               ? 40
@@ -63,7 +63,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
                       const Divider(
                           color: Colors.grey, indent: 20, endIndent: 20),
                       const SizedBox(height: 24),
-                      _buildResponsiveStats(isSmallScreen, isMediumScreen),
+                      _buildStats(isSmallScreen, isMediumScreen),
                       SizedBox(height: isSmallScreen ? 30 : 50),
                       Text(
                         'Book Appointment',
@@ -106,7 +106,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     );
   }
 
-  Widget _buildResponsiveDoctorInfo(bool isSmallScreen, bool isMediumScreen) {
+  Widget _buildDoctorInfo(bool isSmallScreen, bool isMediumScreen) {
     return LayoutBuilder(
       builder: (context, constraints) {
         if (isSmallScreen) {
@@ -164,7 +164,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     );
   }
 
-  Widget _buildResponsiveStats(bool isSmallScreen, bool isMediumScreen) {
+  Widget _buildStats(bool isSmallScreen, bool isMediumScreen) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
@@ -287,19 +287,19 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     );
   }
 
-  Widget _buildTimePicker(
-      AppointmentProvider provider, bool isSmallScreen, bool isMediumScreen) {
-    final timeSlots = _generateTimeSlots();
+ Widget _buildTimePicker(AppointmentProvider provider, bool isSmallScreen, bool isMediumScreen) {
 
+    final timeSlots = _generateTimeSlots();
     return CarouselSlider.builder(
       itemCount: timeSlots.length,
       options: CarouselOptions(
-        height: isSmallScreen
+
+                height: isSmallScreen
             ? 50
             : isMediumScreen
                 ? 60
                 : 80,
-        viewportFraction: isSmallScreen
+          viewportFraction: isSmallScreen
             ? 0.35
             : isMediumScreen
                 ? 0.25
@@ -309,6 +309,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
           provider.setSelectedTime(timeSlots[index]);
         },
       ),
+
       itemBuilder: (context, index, realIndex) {
         bool isSelected = provider.selectedTime == timeSlots[index];
         return OutlinedButton(
