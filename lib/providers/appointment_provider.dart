@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 class AppointmentProvider with ChangeNotifier {
+  // Home Screen State
+  int _selectedIndex = 1;
+
+  // Appointment State
   DateTime _selectedDate = DateTime.now();
   String _selectedTime = '';
   String _bookingFor = '';
@@ -10,8 +14,16 @@ class AppointmentProvider with ChangeNotifier {
   String _otherPersonName = '';
   bool _isRescheduling = false;
   String _appointmentId = '';
+  bool _hasConfirmedAppointment =false; // New field to track confirmed appointments
+  String _referenceNumber = '';
 
-  // Getters
+  // Add this static variable at the top of the class to keep track of the last appointment number
+  static int _lastAppointmentNumber = 0;
+
+  // Home Screen Getters
+  int get selectedIndex => _selectedIndex;
+
+  // Appointment Getters
   DateTime get selectedDate => _selectedDate;
   String get selectedTime => _selectedTime;
   String get bookingFor => _bookingFor;
@@ -21,11 +33,26 @@ class AppointmentProvider with ChangeNotifier {
   String get otherPersonName => _otherPersonName;
   bool get isRescheduling => _isRescheduling;
   String get appointmentId => _appointmentId;
+  bool get hasConfirmedAppointment => _hasConfirmedAppointment;
+  String get referenceNumber => _referenceNumber;
 
-  // Check if there's an active appointment
-  bool get hasActiveAppointment =>
-      _selectedTime.isNotEmpty && _selectedDate.isAfter(DateTime.now());
+  bool get hasActiveAppointment {
 
+    return _selectedTime.isNotEmpty && _appointmentId.isNotEmpty;
+    // Check if there's an active appointment
+    // bool get hasActiveAppointment =>
+    // _hasConfirmedAppointment &&
+    // _selectedTime.isNotEmpty &&
+    // _selectedDate.isAfter(DateTime.now());
+  }
+
+  // Home Screen Methods
+  void setSelectedIndex(int index) {
+    _selectedIndex = index;
+    notifyListeners();
+  }
+
+  // Appointment Methods
   void setSelectedDate(DateTime date) {
     _selectedDate = date;
     notifyListeners();
@@ -84,14 +111,26 @@ class AppointmentProvider with ChangeNotifier {
     _selectedTime = '';
     _appointmentId = '';
     _isRescheduling = false;
+    _hasConfirmedAppointment = false; // Reset confirmation status
     notifyListeners();
   }
 
+//   // Updated confirmAppointment method
   void confirmAppointment() {
-    // Generate a random appointment ID (in real app, this would come from backend)
-    _appointmentId =
-        '#${DateTime.now().millisecondsSinceEpoch.toString().substring(9)}';
+    // Generate sequential appointment ID
+    _lastAppointmentNumber = (_lastAppointmentNumber + 1) % 100; // Keep it within 2 digits
+    _appointmentId = '#${_lastAppointmentNumber.toString().padLeft(2, '0')}';
+
+    // Generate reference number
+    generateReferenceNumber();
+
+    // Ensure we have all required data
+    if (_selectedTime.isEmpty) {
+      throw Exception('Selected time cannot be empty when confirming appointment');
+    }
+
     _isRescheduling = false;
+    _hasConfirmedAppointment = true;  // Set confirmation status
     notifyListeners();
   }
 
@@ -102,17 +141,29 @@ class AppointmentProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Reset all appointment data
+  // Make sure appointment data persists when needed
   void resetAppointmentData() {
-    _selectedDate = DateTime.now();
-    _selectedTime = '';
-    _bookingFor = '';
-    _gender = '';
-    _age = 0;
-    _problemDescription = '';
-    _otherPersonName = '';
-    _isRescheduling = false;
-    _appointmentId = '';
+    if (!hasActiveAppointment) {
+      _selectedDate = DateTime.now();
+      _selectedTime = '';
+      _bookingFor = '';
+      _gender = '';
+      _age = 0;
+      _problemDescription = '';
+      _otherPersonName = '';
+      _isRescheduling = false;
+      _appointmentId = '';
+      // _hasConfirmedAppointment = false;  // Reset confirmation status
+      notifyListeners();
+    }
+  }
+
+  void generateReferenceNumber() {
+    final now = DateTime.now();
+    final year = now.year.toString().substring(2);
+    final date = '$year${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+    final random = (100 + DateTime.now().millisecondsSinceEpoch % 900).toString();
+    _referenceNumber = 'REF-$date-$random';
     notifyListeners();
   }
 }

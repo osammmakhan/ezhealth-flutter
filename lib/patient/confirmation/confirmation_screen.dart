@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ez_health/patient/confirmation/ticket_generator.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/patient/patient_home_screen.dart';
 import 'package:provider/provider.dart';
@@ -13,9 +12,11 @@ class ConfirmationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final appointmentProvider =
         Provider.of<AppointmentProvider>(context, listen: false);
-    final ticketGenerator = TicketGenerator();
-    final referenceNumber = ticketGenerator.generateReferenceNumber();
-    final ticketToken = ticketGenerator.generateTicketToken();
+
+    // Make sure the appointment time is set
+    if (appointmentProvider.selectedTime.isEmpty) {
+      appointmentProvider.setSelectedTime('Your selected time here');
+    }
 
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 600;
@@ -40,8 +41,6 @@ class ConfirmationScreen extends StatelessWidget {
                     SizedBox(height: isSmallScreen ? 40 : 50),
                     _buildAppointmentCard(
                       appointmentProvider: appointmentProvider,
-                      referenceNumber: referenceNumber,
-                      ticketToken: ticketToken,
                       isSmallScreen: isSmallScreen,
                     ),
                     SizedBox(height: isSmallScreen ? 40 : 50),
@@ -93,15 +92,15 @@ class ConfirmationScreen extends StatelessWidget {
         const SizedBox(height: 10),
         Container(
           padding: EdgeInsets.symmetric(
-            horizontal: isSmallScreen ? 16 : 24,
-            vertical: isSmallScreen ? 8 : 12,
-          ),
+              horizontal: isSmallScreen ? 16 : 24,
+              vertical: isSmallScreen ? 8 : 12
+              ),
           decoration: BoxDecoration(
             color: customLightBlue,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
-            'PKR 5,000',
+            'PKR 500',
             style: TextStyle(
               fontSize: isSmallScreen ? 24 : 28,
               fontWeight: FontWeight.bold,
@@ -115,8 +114,6 @@ class ConfirmationScreen extends StatelessWidget {
 
   Widget _buildAppointmentCard({
     required AppointmentProvider appointmentProvider,
-    required String referenceNumber,
-    required String ticketToken,
     required bool isSmallScreen,
   }) {
     return Card(
@@ -131,21 +128,21 @@ class ConfirmationScreen extends StatelessWidget {
             _buildDoctorInfo(isSmallScreen),
             SizedBox(height: isSmallScreen ? 24 : 32),
             _buildDetailRow(
-              'Date',
-              '${appointmentProvider.selectedDate.day.toString().padLeft(2, '0')}-'
-                  '${appointmentProvider.selectedDate.month.toString().padLeft(2, '0')}-'
-                  '${appointmentProvider.selectedDate.year}',
-              isSmallScreen,
-            ),
+                'Date',
+                '${appointmentProvider.selectedDate.day.toString().padLeft(2, '0')}-'
+                    '${appointmentProvider.selectedDate.month.toString().padLeft(2, '0')}-'
+                    '${appointmentProvider.selectedDate.year}',
+                    isSmallScreen),
             SizedBox(height: isSmallScreen ? 15 : 20),
-            _buildDetailRow(
-                'Time', appointmentProvider.selectedTime, isSmallScreen),
+            _buildDetailRow('Time', appointmentProvider.selectedTime, isSmallScreen),
             SizedBox(height: isSmallScreen ? 15 : 20),
             _buildDetailRow('Location', 'Hyderabad, Pakistan', isSmallScreen),
             Divider(height: isSmallScreen ? 30 : 40),
-            _buildDetailRow('Reference No.', referenceNumber, isSmallScreen),
+            _buildDetailRow(
+                'Reference Number', appointmentProvider.referenceNumber, isSmallScreen),
             SizedBox(height: isSmallScreen ? 15 : 20),
-            _buildDetailRow('Ticket Token', ticketToken, isSmallScreen),
+            _buildDetailRow(
+                'Ticket Token', appointmentProvider.appointmentId, isSmallScreen),
           ],
         ),
       ),
@@ -176,11 +173,11 @@ class ConfirmationScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: isSmallScreen ? 4 : 8),
               Row(
                 children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 16),
-                  const Text(
+                  Icon(Icons.star, color: Colors.amber, size: isSmallScreen ? 16 : 20 ),
+                  Text(
                     ' 4.9',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
@@ -228,6 +225,13 @@ class ConfirmationScreen extends StatelessWidget {
   Widget _buildDoneButton(BuildContext context) {
     return HorizontalBtn(
       onPressed: () {
+        // Get the provider but DON'T generate a new appointment ID
+        final provider =
+            Provider.of<AppointmentProvider>(context, listen: false);
+
+        // Add a print statement to verify the state
+        print('Appointment ID: ${provider.appointmentId}');
+
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (context) => const HomeScreen(),
