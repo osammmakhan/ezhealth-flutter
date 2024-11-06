@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ez_health/patient/confirmation/confirmation_screen.dart';
+import 'package:ez_health/patient/confirmation_screen.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/providers/payment_provider.dart';
 import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
