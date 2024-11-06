@@ -41,7 +41,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+<<<<<<< HEAD
 
 
 # Firebase
 secret.dart
+=======
+>>>>>>> 1a7366016ee6deb8422eb759f04266fa5d02140c
