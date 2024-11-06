@@ -4,6 +4,7 @@ import 'package:ez_health/patient/confirmation/confirmation_screen.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/providers/payment_provider.dart';
 import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
+import 'package:ez_health/providers/appointment_provider.dart';
 
 class PaymentDetailsScreen extends StatefulWidget {
   const PaymentDetailsScreen({super.key});
@@ -279,6 +280,10 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
             text: 'Pay & Confirm',
             onPressed: () {
               if (_formKey.currentState!.validate()) {
+                // Generate appointment ID before navigation
+                final appointmentProvider = Provider.of<AppointmentProvider>(context, listen: false);
+                appointmentProvider.confirmAppointment();
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(

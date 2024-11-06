@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/patient/appointment/patient_appointment_screen.dart';
 import 'package:ez_health/providers/appointment_provider.dart';
-// import 'package:ez_health/providers/home_screen_provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -13,12 +12,6 @@ class HomeScreen extends StatelessWidget {
 
     return Consumer<AppointmentProvider>(
       builder: (context, provider, child) {
-        // Add print statements to debug
-        print('Building HomeScreen');
-        print('Has Active Appointment: ${provider.hasActiveAppointment}');
-        print('Selected Time: ${provider.selectedTime}');
-        print('Appointment ID: ${provider.appointmentId}');
-
         final hasAppointment = provider.hasActiveAppointment;
 
         return Scaffold(

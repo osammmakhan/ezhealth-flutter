@@ -14,8 +14,11 @@ class AppointmentProvider with ChangeNotifier {
   String _otherPersonName = '';
   bool _isRescheduling = false;
   String _appointmentId = '';
-  bool _hasConfirmedAppointment =
-      false; // New field to track confirmed appointments
+  bool _hasConfirmedAppointment =false; // New field to track confirmed appointments
+  String _referenceNumber = '';
+
+  // Add this static variable at the top of the class to keep track of the last appointment number
+  static int _lastAppointmentNumber = 0;
 
   // Home Screen Getters
   int get selectedIndex => _selectedIndex;
@@ -31,14 +34,9 @@ class AppointmentProvider with ChangeNotifier {
   bool get isRescheduling => _isRescheduling;
   String get appointmentId => _appointmentId;
   bool get hasConfirmedAppointment => _hasConfirmedAppointment;
+  String get referenceNumber => _referenceNumber;
 
-//   // Updated hasActiveAppointment getter
   bool get hasActiveAppointment {
-    // Add print statement to debug
-    print('Checking hasActiveAppointment:');
-    print('Selected Time: $_selectedTime');
-    print('Appointment ID: $_appointmentId');
-    print('Selected Date: $_selectedDate');
 
     return _selectedTime.isNotEmpty && _appointmentId.isNotEmpty;
     // Check if there's an active appointment
@@ -119,25 +117,20 @@ class AppointmentProvider with ChangeNotifier {
 
 //   // Updated confirmAppointment method
   void confirmAppointment() {
-    // Generate appointment ID
-    _appointmentId =
-        '#${DateTime.now().millisecondsSinceEpoch.toString().substring(9)}';
+    // Generate sequential appointment ID
+    _lastAppointmentNumber = (_lastAppointmentNumber + 1) % 100; // Keep it within 2 digits
+    _appointmentId = '#${_lastAppointmentNumber.toString().padLeft(2, '0')}';
+
+    // Generate reference number
+    generateReferenceNumber();
 
     // Ensure we have all required data
     if (_selectedTime.isEmpty) {
-      throw Exception(
-          'Selected time cannot be empty when confirming appointment');
+      throw Exception('Selected time cannot be empty when confirming appointment');
     }
 
-    // Add print statement to debug
-    print('Confirming appointment:');
-    print('Selected Time: $_selectedTime');
-    print('Appointment ID: $_appointmentId');
-    print('Selected Date: $_selectedDate');
-    // _isRescheduling = false;
-    // _hasConfirmedAppointment = true;  // Set confirmation status
-
-    // setAppointmentId(_appointmentId);
+    _isRescheduling = false;
+    _hasConfirmedAppointment = true;  // Set confirmation status
     notifyListeners();
   }
 
@@ -163,5 +156,14 @@ class AppointmentProvider with ChangeNotifier {
       // _hasConfirmedAppointment = false;  // Reset confirmation status
       notifyListeners();
     }
+  }
+
+  void generateReferenceNumber() {
+    final now = DateTime.now();
+    final year = now.year.toString().substring(2);
+    final date = '$year${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+    final random = (100 + DateTime.now().millisecondsSinceEpoch % 900).toString();
+    _referenceNumber = 'REF-$date-$random';
+    notifyListeners();
   }
 }

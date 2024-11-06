@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ez_health/patient/confirmation/ticket_generator.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/patient/patient_home_screen.dart';
 import 'package:provider/provider.dart';
@@ -12,9 +11,6 @@ class ConfirmationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appointmentProvider = Provider.of<AppointmentProvider>(context, listen: false);
-    final ticketGenerator = TicketGenerator();
-    final referenceNumber = ticketGenerator.generateReferenceNumber();
-    final ticketToken = ticketGenerator.generateTicketToken();
 
     // Make sure the appointment time is set
     if (appointmentProvider.selectedTime.isEmpty) {
@@ -36,8 +32,6 @@ class ConfirmationScreen extends StatelessWidget {
                 const SizedBox(height: 40),
                 _buildAppointmentCard(
                   appointmentProvider: appointmentProvider,
-                  referenceNumber: referenceNumber,
-                  ticketToken: ticketToken,
                 ),
                 const SizedBox(height: 40),
                 _buildDoneButton(context),
@@ -105,8 +99,6 @@ class ConfirmationScreen extends StatelessWidget {
 
   Widget _buildAppointmentCard({
     required AppointmentProvider appointmentProvider,
-    required String referenceNumber,
-    required String ticketToken,
   }) {
     return Card(
       elevation: 4,
@@ -128,10 +120,9 @@ class ConfirmationScreen extends StatelessWidget {
             const SizedBox(height: 15),
             _buildDetailRow('Location', 'Hyderabad, Pakistan'),
             const Divider(height: 30),
-            _buildDetailRow('Reference No.', referenceNumber),
+            _buildDetailRow('Reference Number', appointmentProvider.referenceNumber),
             const SizedBox(height: 15),
-            _buildDetailRow('Ticket Token', ticketToken),
-            // _buildDetailRow('Ticket Token', appointmentProvider.appointmentId),
+            _buildDetailRow('Ticket Token', appointmentProvider.appointmentId),
           ],
         ),
       ),
@@ -210,28 +201,23 @@ class ConfirmationScreen extends StatelessWidget {
     );
   }
 
-Widget _buildDoneButton(BuildContext context) {
-  return HorizontalBtn(
-    onPressed: () {
-      // Get the provider and confirm BEFORE navigation
-      final provider = Provider.of<AppointmentProvider>(context, listen: false);
+  Widget _buildDoneButton(BuildContext context) {
+    return HorizontalBtn(
+      onPressed: () {
+        // Get the provider but DON'T generate a new appointment ID
+        final provider = Provider.of<AppointmentProvider>(context, listen: false);
 
-      // Confirm the appointment
-      provider.confirmAppointment();
+        // Add a print statement to verify the state
+        print('Appointment ID: ${provider.appointmentId}');
 
-      // Add a print statement to verify the state
-      print('Appointment Confirmed: ${provider.hasActiveAppointment}');
-      print('Selected Time: ${provider.selectedTime}');
-      print('Appointment ID: ${provider.appointmentId}');
-
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
-        (route) => false,
-      );
-    },
-    text: 'Done',
-  );
-}
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const HomeScreen(),
+          ),
+          (route) => false,
+        );
+      },
+      text: 'Done',
+    );
+  }
 }
