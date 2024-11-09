@@ -158,6 +158,11 @@ class ConfirmationScreen extends StatelessWidget {
           return const Center(child: Text('Appointment not found'));
         }
 
+        final referenceNumber = appointmentData['referenceNumber'] as String? ?? 'N/A';
+        final tokenNumber = appointmentData['tokenNumber']?.toString().padLeft(2, '0') ?? 'N/A';
+        final appointmentTime = appointmentData['appointmentTime'] as String? ?? 'N/A';
+        final appointmentDate = appointmentData['appointmentDate'] as Timestamp?;
+
         return Card(
           elevation: 4,
           shape: RoundedRectangleBorder(
@@ -169,29 +174,32 @@ class ConfirmationScreen extends StatelessWidget {
               children: [
                 _buildDoctorInfo(isSmallScreen),
                 SizedBox(height: isSmallScreen ? 24 : 32),
+                _buildPatientInfo(appointmentData, isSmallScreen),
+                SizedBox(height: isSmallScreen ? 15 : 20),
                 _buildDetailRow(
                   'Date',
-                  _formatDate(appointmentData['appointmentDate'] as Timestamp),
+                  appointmentDate != null ? _formatDate(appointmentDate) : 'N/A',
                   isSmallScreen,
                 ),
                 SizedBox(height: isSmallScreen ? 15 : 20),
                 _buildDetailRow(
                   'Time',
-                  appointmentData['appointmentTime'] as String,
+                  appointmentTime,
                   isSmallScreen,
                 ),
                 SizedBox(height: isSmallScreen ? 15 : 20),
                 _buildDetailRow('Location', 'Hyderabad, Pakistan', isSmallScreen),
                 Divider(height: isSmallScreen ? 30 : 40),
                 _buildDetailRow(
-                  'Reference Number',
-                  appointmentData['referenceNumber'] as String,
+                  'Token Number',
+                  tokenNumber,
                   isSmallScreen,
+                  isHighlighted: true,
                 ),
                 SizedBox(height: isSmallScreen ? 15 : 20),
                 _buildDetailRow(
-                  'Token Number',
-                  appointmentData['appointmentId'] as String,
+                  'Reference Number',
+                  referenceNumber,
                   isSmallScreen,
                 ),
               ],
@@ -260,7 +268,12 @@ class ConfirmationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, bool isSmallScreen) {
+  Widget _buildDetailRow(
+    String label, 
+    String value, 
+    bool isSmallScreen, 
+    {bool isHighlighted = false}
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -271,13 +284,32 @@ class ConfirmationScreen extends StatelessWidget {
             fontSize: isSmallScreen ? 16 : 18,
           ),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: isSmallScreen ? 16 : 18,
-          ),
-        ),
+        isHighlighted 
+            ? Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: customLightBlue,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: isSmallScreen ? 16 : 18,
+                    color: customBlue,
+                  ),
+                ),
+              )
+            : Text(
+                value,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: isSmallScreen ? 16 : 18,
+                ),
+              ),
       ],
     );
   }
@@ -285,6 +317,7 @@ class ConfirmationScreen extends StatelessWidget {
   Widget _buildDoneButton(BuildContext context) {
     return HorizontalBtn(
       onPressed: () {
+        // TODO: I think this part is redundant now so might remove it later.
         // Get the provider but DON'T generate a new appointment ID
         final provider =
             Provider.of<AppointmentProvider>(context, listen: false);
@@ -300,6 +333,51 @@ class ConfirmationScreen extends StatelessWidget {
         );
       },
       text: 'Done',
+    );
+  }
+
+  Widget _buildPatientInfo(Map<String, dynamic> appointmentData, bool isSmallScreen) {
+    final userId = appointmentData['userId'] as String?;
+    final bookingFor = appointmentData['bookingFor'] as String? ?? 'Myself';
+    final otherPersonName = appointmentData['patientName'] as String?;
+    
+    // If booking is for someone else and we have their name, return it directly
+    if (bookingFor != 'Myself' && otherPersonName != null) {
+      return _buildDetailRow(
+        'Patient Name',
+        otherPersonName,
+        isSmallScreen,
+      );
+    }
+    
+    // Otherwise, fetch the user's name from users collection
+    if (userId == null) {
+      return const SizedBox.shrink();
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SizedBox.shrink();
+        }
+
+        final userData = snapshot.data?.data() as Map<String, dynamic>?;
+        if (userData == null) {
+          return const SizedBox.shrink();
+        }
+
+        final name = userData['name'] as String? ?? 'N/A';
+
+        return _buildDetailRow(
+          'Patient Name',
+          name,
+          isSmallScreen,
+        );
+      },
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:ez_health/providers/appointment_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:ez_health/patient/confirmation_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -452,74 +453,103 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 return Card(
                   color: isCurrentUser ? customLightBlue : null,
-                  child: Column(
-                    children: [
-                      ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: customBlue,
-                          child: Text('${index + 1}'),
+                  elevation: isCurrentUser ? 4 : 1,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: InkWell(
+                    onTap: isCurrentUser ? () {
+                      final appointmentProvider = Provider.of<AppointmentProvider>(context, listen: false);
+                      appointmentProvider.setAppointmentIdSilently(appointmentId);
+                      
+                      Future.microtask(() {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ConfirmationScreen(),
+                          ),
+                        );
+                      });
+                    } : null,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: customBlue,
+                            child: Text('${index + 1}'),
+                          ),
+                          title: Text(
+                            'Appointment at ${appointment['appointmentTime']}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isCurrentUser ? 'Your appointment' : 'Estimated wait: ${(index + 1) * 15} mins',
+                              ),
+                              Text(
+                                'Date: ${_formatDate(appointment['appointmentDate'])}',
+                                style: const TextStyle(color: Colors.black54),
+                              ),
+                            ],
+                          ),
+                          trailing: isCurrentUser
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.check_circle, color: customBlue),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ],
+                                )
+                              : null,
                         ),
-                        title: Text(
-                          'Appointment at ${appointment['appointmentTime']}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              isCurrentUser ? 'Your appointment' : 'Estimated wait: ${(index + 1) * 15} mins',
-                            ),
-                            Text(
-                              'Date: ${_formatDate(appointment['appointmentDate'])}',
-                              style: const TextStyle(color: Colors.black54),
-                            ),
-                          ],
-                        ),
-                        trailing: isCurrentUser
-                            ? const Icon(Icons.check_circle, color: customBlue)
-                            : null,
-                      ),
-                      if (isCurrentUser) 
-                        Consumer<AppointmentProvider>(
-                          builder: (context, provider, child) => Padding(
-                            padding: const EdgeInsets.only(
-                              left: 16,
-                              right: 16,
-                              bottom: 12,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                TextButton.icon(
-                                  onPressed: () => _showCancelConfirmation(
-                                    context,
-                                    appointmentId,
-                                    provider,
+                        if (isCurrentUser) 
+                          Consumer<AppointmentProvider>(
+                            builder: (context, provider, child) => Padding(
+                              padding: const EdgeInsets.only(
+                                left: 16,
+                                right: 16,
+                                bottom: 12,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton.icon(
+                                    onPressed: () => _showCancelConfirmation(
+                                      context,
+                                      appointmentId,
+                                      provider,
+                                    ),
+                                    icon: const Icon(Icons.cancel_outlined, size: 20),
+                                    label: const Text('Cancel'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.red,
+                                    ),
                                   ),
-                                  icon: const Icon(Icons.cancel_outlined, size: 20),
-                                  label: const Text('Cancel'),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Colors.red,
+                                  const SizedBox(width: 8),
+                                  TextButton.icon(
+                                    onPressed: () => _showRescheduleDialog(
+                                      context,
+                                      appointmentId,
+                                      provider,
+                                    ),
+                                    icon: const Icon(Icons.schedule, size: 20),
+                                    label: const Text('Reschedule'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: customBlue,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                TextButton.icon(
-                                  onPressed: () => _showRescheduleDialog(
-                                    context,
-                                    appointmentId,
-                                    provider,
-                                  ),
-                                  icon: const Icon(Icons.schedule, size: 20),
-                                  label: const Text('Reschedule'),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: customBlue,
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
