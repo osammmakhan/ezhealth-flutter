@@ -285,6 +285,7 @@ class AdminDashboardScreen extends StatelessWidget {
           .update({
         'status': status,
         'updatedAt': FieldValue.serverTimestamp(),
+        if (status == 'cancelled') 'cancelledBy': 'admin',
       });
     } catch (e) {
       print('Error updating appointment status: $e');
