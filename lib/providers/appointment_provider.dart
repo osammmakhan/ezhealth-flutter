@@ -1,65 +1,168 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AppointmentProvider with ChangeNotifier {
-  // Home Screen State
-  int _selectedIndex = 1;
-  bool _hasAppointment = false;
-
-  // Appointment State
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  
+  bool _isLoading = false;
+  String _appointmentId = '';
   DateTime _selectedDate = DateTime.now();
   String _selectedTime = '';
-  String _bookingFor = '';
+  String _bookingFor = 'Myself';
   String _gender = '';
   double _age = 0;
   String _problemDescription = '';
+  Stream<QuerySnapshot>? _appointmentsStream;
+  int _selectedIndex = 0;
   String _otherPersonName = '';
-  bool _isRescheduling = false;
-  String _appointmentId = '';
-  bool _hasConfirmedAppointment =false; // New field to track confirmed appointments
-  String _referenceNumber = '';
+  bool _hasRescheduleRequest = false;
 
-  // Add this static variable at the top of the class to keep track of the last appointment number
-  static int _lastAppointmentNumber = 0;
-
-  // Home Screen Getters
-  int get selectedIndex => _selectedIndex;
-  bool get hasAppointment => _hasAppointment;
-
-  // Appointment Getters
+  // Getters
+  bool get isLoading => _isLoading;
+  String get appointmentId => _appointmentId;
   DateTime get selectedDate => _selectedDate;
   String get selectedTime => _selectedTime;
   String get bookingFor => _bookingFor;
   String get gender => _gender;
   double get age => _age;
   String get problemDescription => _problemDescription;
+  Stream<QuerySnapshot>? get appointmentsStream => _appointmentsStream;
+  int get selectedIndex => _selectedIndex;
   String get otherPersonName => _otherPersonName;
-  bool get isRescheduling => _isRescheduling;
-  String get appointmentId => _appointmentId;
-  bool get hasConfirmedAppointment => _hasConfirmedAppointment;
-  String get referenceNumber => _referenceNumber;
+  bool get hasRescheduleRequest => _hasRescheduleRequest;
 
-  bool get hasActiveAppointment {
-
-    return _selectedTime.isNotEmpty && _appointmentId.isNotEmpty;
-    // Check if there's an active appointment
-    // bool get hasActiveAppointment =>
-    // _hasConfirmedAppointment &&
-    // _selectedTime.isNotEmpty &&
-    // _selectedDate.isAfter(DateTime.now());
+  // Generate Appointment Number
+  Future<String> _generateAppointmentNumber() async {
+    final docRef = _firestore.collection('counters').doc('appointments');
+    
+    try {
+      String number = await _firestore.runTransaction<String>((transaction) async {
+        final snapshot = await transaction.get(docRef);
+        
+        int currentNumber = 0;
+        if (snapshot.exists) {
+          currentNumber = snapshot.data()?['current'] ?? 0;
+        }
+        
+        int newNumber = currentNumber + 1;
+        transaction.set(docRef, {'current': newNumber}, SetOptions(merge: true));
+        
+        // Format: AP-YYYYMMDD-XXXX
+        return 'AP-${DateTime.now().year}${DateTime.now().month.toString().padLeft(2, '0')}${DateTime.now().day.toString().padLeft(2, '0')}-${newNumber.toString().padLeft(4, '0')}';
+      });
+      
+      return number;
+    } catch (e) {
+      print('Error generating appointment number: $e');
+      rethrow;
+    }
   }
 
-  // Home Screen Methods
-  void setSelectedIndex(int index) {
-    _selectedIndex = index;
+  // Method to create initial appointment
+  Future<void> createAppointment() async {
+    _isLoading = true;
     notifyListeners();
+
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw 'User not authenticated';
+
+      final appointmentNumber = await _generateAppointmentNumber();
+      final referenceNumber = 'REF${DateTime.now().millisecondsSinceEpoch % 10000}';
+      
+      final appointmentRef = _firestore.collection('appointments').doc();
+      _appointmentId = appointmentRef.id;
+
+      await appointmentRef.set({
+        'appointmentNumber': appointmentNumber,
+        'referenceNumber': referenceNumber,
+        'userId': user.uid,
+        'patientName': _bookingFor == 'Myself' ? user.displayName : _otherPersonName,
+        'appointmentDate': Timestamp.fromDate(_selectedDate),
+        'appointmentTime': _selectedTime,
+        'bookingFor': _bookingFor,
+        'gender': _gender,
+        'age': _age,
+        'problemDescription': _problemDescription,
+        'status': 'pending',
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'paymentStatus': 'completed',
+        'paymentAmount': 500.00,
+        'isStarted': false,
+        'startedAt': null,
+        'completedAt': null,
+      });
+
+      // Create notification for admin
+      await _firestore.collection('notifications').add({
+        'userId': 'admin',
+        'type': 'new_appointment',
+        'appointmentId': _appointmentId,
+        'message': 'New appointment request: $appointmentNumber',
+        'read': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+    } catch (e) {
+      print('Error creating appointment: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
-  void setHasAppointment(bool value) {
-    _hasAppointment = value;
+  // Method to only handle status changes
+  Future<void> confirmAppointment(String appointmentId) async {
+    _isLoading = true;
     notifyListeners();
+
+    try {
+      // Get the appointment document
+      final appointmentDoc = await _firestore
+          .collection('appointments')
+          .doc(appointmentId)
+          .get();
+
+      if (!appointmentDoc.exists) {
+        throw 'Appointment not found';
+      }
+
+      // Update only the status and updatedAt fields
+      await _firestore
+          .collection('appointments')
+          .doc(appointmentId)
+          .update({
+        'status': 'confirmed',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Create notification for patient
+      final patientId = appointmentDoc.data()?['userId'];
+      if (patientId != null) {
+        await _firestore.collection('notifications').add({
+          'userId': patientId,
+          'type': 'appointment_confirmed',
+          'appointmentId': appointmentId,
+          'message': 'Your appointment has been confirmed',
+          'read': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+    } catch (e) {
+      print('Error confirming appointment: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
-  // Appointment Methods
+  // Setters
   void setSelectedDate(DateTime date) {
     _selectedDate = date;
     notifyListeners();
@@ -70,107 +173,234 @@ class AppointmentProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void setBookingFor(String booking) {
-    _bookingFor = booking;
-    if (booking != 'Other') {
-      _otherPersonName = '';
-    }
+  void setBookingFor(String value) {
+    _bookingFor = value;
     notifyListeners();
   }
 
-  void setOtherPersonName(String name) {
-    _otherPersonName = name;
+  void setGender(String value) {
+    _gender = value;
     notifyListeners();
   }
 
-  void setGender(String selectedGender) {
-    _gender = selectedGender;
+  void setAge(double value) {
+    _age = value;
     notifyListeners();
   }
 
-  void setAge(double newAge) {
-    _age = newAge;
+  void setProblemDescription(String value) {
+    _problemDescription = value;
     notifyListeners();
   }
 
-  void setProblemDescription(String description) {
-    _problemDescription = description;
-    notifyListeners();
-  }
-
-  void setAppointmentId(String id) {
-    _appointmentId = id;
-    notifyListeners();
-  }
-
-  void startRescheduling() {
-    _isRescheduling = true;
-    notifyListeners();
-  }
-
-  void cancelRescheduling() {
-    _isRescheduling = false;
-    notifyListeners();
-  }
-
-  void cancelAppointment() {
+  void resetForm() {
+    _appointmentId = '';
     _selectedDate = DateTime.now();
     _selectedTime = '';
-    _appointmentId = '';
-    _isRescheduling = false;
-    _hasConfirmedAppointment = false; // Reset confirmation status
+    _bookingFor = 'Myself';
+    _gender = '';
+    _age = 0;
+    _problemDescription = '';
     notifyListeners();
   }
 
-//   // Updated confirmAppointment method
-  void confirmAppointment() {
-    // Generate sequential appointment ID
-    _lastAppointmentNumber = (_lastAppointmentNumber + 1) % 100; // Keep it within 2 digits
-    _appointmentId = '#${_lastAppointmentNumber.toString().padLeft(2, '0')}';
-
-    // Generate reference number
-    generateReferenceNumber();
-
-    // Ensure we have all required data
-    if (_selectedTime.isEmpty) {
-      throw Exception('Selected time cannot be empty when confirming appointment');
-    }
-
-    _isRescheduling = false;
-    _hasConfirmedAppointment = true;  // Set confirmation status
+  void setOtherPersonName(String value) {
+    _otherPersonName = value;
     notifyListeners();
   }
 
-  void rescheduleAppointment(DateTime newDate, String newTime) {
-    _selectedDate = newDate;
-    _selectedTime = newTime;
-    _isRescheduling = false;
-    notifyListeners();
-  }
+  // Add this method
+  Future<void> markAppointmentAsCompleted(String appointmentId) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
 
-  // Make sure appointment data persists when needed
-  void resetAppointmentData() {
-    if (!hasActiveAppointment) {
-      _selectedDate = DateTime.now();
-      _selectedTime = '';
-      _bookingFor = '';
-      _gender = '';
-      _age = 0;
-      _problemDescription = '';
-      _otherPersonName = '';
-      _isRescheduling = false;
-      _appointmentId = '';
-      // _hasConfirmedAppointment = false;  // Reset confirmation status
+      await FirebaseFirestore.instance
+          .collection('appointments')
+          .doc(appointmentId)
+          .update({
+        'status': 'completed',
+        'completedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Create notification for patient
+      final appointment = await FirebaseFirestore.instance
+          .collection('appointments')
+          .doc(appointmentId)
+          .get();
+      
+      if (appointment.exists) {
+        final patientId = appointment.data()?['userId'];
+        if (patientId != null) {
+          await FirebaseFirestore.instance.collection('notifications').add({
+            'userId': patientId,
+            'type': 'appointment_completed',
+            'appointmentId': appointmentId,
+            'message': 'Your appointment has been marked as completed',
+            'read': false,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+
+    } catch (e) {
+      print('Error marking appointment as completed: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
 
-  void generateReferenceNumber() {
-    final now = DateTime.now();
-    final year = now.year.toString().substring(2);
-    final date = '$year${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
-    final random = (100 + DateTime.now().millisecondsSinceEpoch % 900).toString();
-    _referenceNumber = 'REF-$date-$random';
+  // Initialize streams
+  void initializeStreams() {
+    final user = _auth.currentUser;
+    if (user != null) {
+      // Get the current active appointment
+      FirebaseFirestore.instance
+          .collection('appointments')
+          .where('userId', isEqualTo: user.uid)
+          .where('status', whereIn: ['confirmed', 'pending'])
+          .orderBy('createdAt', descending: true)
+          .limit(1)
+          .get()
+          .then((snapshot) {
+        if (snapshot.docs.isNotEmpty) {
+          appointmentId = snapshot.docs.first.id;
+        }
+      });
+
+      // Stream for all appointments
+      _appointmentsStream = _firestore
+          .collection('appointments')
+          .where('userId', isEqualTo: user.uid)
+          .orderBy('createdAt', descending: true)
+          .snapshots();
+
+      // Check for reschedule requests
+      _firestore
+          .collection('appointments')
+          .where('userId', isEqualTo: user.uid)
+          .where('status', isEqualTo: 'pending')
+          .snapshots()
+          .listen((snapshot) {
+        _hasRescheduleRequest = snapshot.docs.any((doc) {
+          Map<String, dynamic> data = {};
+          try {
+            data = doc.data() as Map<String, dynamic>;
+          } catch (e) {
+            return false;
+          }
+          return data.containsKey('requestedDate') && 
+                 data.containsKey('requestedTime');
+        });
+        notifyListeners();
+      });
+    }
+  }
+
+  // Set selected index
+  void setSelectedIndex(int index) {
+    _selectedIndex = index;
     notifyListeners();
+  }
+
+  // Payment processing
+  Future<void> processPayment({
+    required String cardNumber,
+    required String expiryDate,
+    required String cvv,
+    required String cardHolderName,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      // Simulate payment processing delay
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Mock successful payment
+      print('Payment processed successfully');
+      print('Card Number: ${cardNumber.replaceRange(0, cardNumber.length - 4, '*' * (cardNumber.length - 4))}');
+      print('Amount: \$500.00');
+
+    } catch (e) {
+      print('Payment processing error: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Add this new method
+  Future<void> requestReschedule(String appointmentId, DateTime newDate, String newTime) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _firestore.collection('appointments').doc(appointmentId).update({
+        'status': 'pending',
+        'requestedDate': Timestamp.fromDate(newDate),
+        'requestedTime': newTime,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Create notification for admin
+      await _firestore.collection('notifications').add({
+        'userId': 'admin',
+        'type': 'reschedule_request',
+        'appointmentId': appointmentId,
+        'message': 'Patient requested to reschedule appointment',
+        'read': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+    } catch (e) {
+      print('Error requesting reschedule: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void setAppointmentIdSilently(String value) {
+    _appointmentId = value;
+    // No notifyListeners() call
+  }
+
+  set appointmentId(String value) {
+    _appointmentId = value;
+    notifyListeners();
+  }
+
+  Future<void> cancelAppointment(String appointmentId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _firestore.collection('appointments').doc(appointmentId).update({
+        'status': 'cancelled',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Create notification for admin
+      await _firestore.collection('notifications').add({
+        'userId': 'admin',
+        'type': 'appointment_cancelled',
+        'appointmentId': appointmentId,
+        'message': 'Patient cancelled their appointment',
+        'read': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+    } catch (e) {
+      print('Error cancelling appointment: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

@@ -3,19 +3,36 @@ import 'package:provider/provider.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/patient/appointment/patient_appointment_screen.dart';
 import 'package:ez_health/providers/appointment_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize streams after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<AppointmentProvider>(context, listen: false).initializeStreams();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final padding = screenSize.width * 0.04; // Dynamic padding
+    final padding = screenSize.width * 0.04;
 
     return Consumer<AppointmentProvider>(
       builder: (context, provider, child) {
-        final hasAppointment = provider.hasActiveAppointment;
-
         return Scaffold(
           body: SafeArea(
             child: SingleChildScrollView(
@@ -26,30 +43,12 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     _buildWelcomeSection(),
                     const SizedBox(height: 24),
-
-                    // Doctor Section Title
-                    Text(
-                      hasAppointment ? 'Your Doctor' : 'Get Your Appointment',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    _buildDoctorCard(context, hasAppointment),
-
-                    if (hasAppointment) ...[
-                      const SizedBox(height: 24),
-                      _buildAppointmentSection(context, provider),
-                      _buildWaitingList(),
-                    ],
+                    _buildAppointmentSection(context, provider),
                   ],
                 ),
               ),
             ),
           ),
-          bottomNavigationBar: _buildBottomNav(context, provider),
         );
       },
     );
@@ -57,7 +56,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildWelcomeSection() {
     return Container(
-      child: Row(
+      child: const Row(
         children: [
           CircleAvatar(
             radius: 25,
@@ -234,152 +233,381 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildAppointmentButton(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const PatientAppointmentScreen(),
-          ),
-        );
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-      child: const Text(
-        'Make Appointment',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppointmentSection(
-    BuildContext context,
-    AppointmentProvider appointmentProvider,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Your Appointment',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Appointment at ${appointmentProvider.selectedTime}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      appointmentProvider.appointmentId,
-                      style: const TextStyle(
-                        color: customBlue,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildActionButton(
-                      context,
-                      'Reschedule',
-                      Icons.calendar_today,
-                      () {
-                        appointmentProvider.startRescheduling();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const PatientAppointmentScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildActionButton(
-                      context,
-                      'Cancel',
-                      Icons.close,
-                      () => appointmentProvider.cancelAppointment(),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWaitingList() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 24),
-        const Text(
-          'Waiting List',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: 5,
-          itemBuilder: (context, index) {
-            return Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: customLightBlue,
-                  child: Text(
-                    '#${(43 + index).toString().padLeft(3, '0')}',
-                    style: const TextStyle(
-                      color: customBlue,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                title: Text(
-                  'Appointment at ${5 + (index ~/ 2)}:${index % 2 == 0 ? "00" : "30"} PM',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+    return Consumer<AppointmentProvider>(
+      builder: (context, provider, child) {
+        return ElevatedButton(
+          onPressed: provider.isLoading ? null : () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PatientAppointmentScreen(),
               ),
             );
           },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: customBlue,
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: provider.isLoading
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
+              : const Text(
+                  'Make Appointment',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
+                ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAppointmentSection(BuildContext context, AppointmentProvider provider) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('appointments')
+          .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+          .where('status', whereIn: ['confirmed', 'pending'])
+          .orderBy('createdAt', descending: true)
+          .limit(1)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        // Check for reschedule request or pending appointment
+        if (provider.hasRescheduleRequest) {
+          return _buildRescheduleRequestMessage();
+        }
+
+        // Even if there's an error or no data, show the initial home screen
+        if (!snapshot.hasData || snapshot.data?.docs.isEmpty == true) {
+          return _buildInitialHomeScreen(context);
+        }
+
+        // Get the most recent active appointment
+        final activeAppointment = snapshot.data?.docs.first;
+        if (activeAppointment != null) {
+          final appointmentData = activeAppointment.data() as Map<String, dynamic>;
+          // Update the provider without notifying listeners
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            provider.setAppointmentIdSilently(activeAppointment.id);
+          });
+          
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Your Doctor',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildDoctorCard(context, true),
+              // Add pending appointment message if status is pending
+              if (appointmentData['status'] == 'pending')
+                _buildPendingAppointmentMessage(appointmentData),
+              if (appointmentData['status'] == 'confirmed')
+                _buildWaitingList(provider.appointmentId),
+            ],
+          );
+        }
+
+        return _buildInitialHomeScreen(context);
+      },
+    );
+  }
+
+  Widget _buildRescheduleRequestMessage() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: customLightBlue.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: customBlue.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.pending_actions,
+            size: 48,
+            color: customBlue.withOpacity(0.7),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Reschedule Request Pending',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: customBlue,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Your request to reschedule the appointment is under review. Once confirmed, you\'ll see your updated appointment details here.',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.black87,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInitialHomeScreen(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Get Your Appointment',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        const SizedBox(height: 16),
+        _buildDoctorCard(context, false),
       ],
+    );
+  }
+
+  Widget _buildWaitingList(String currentAppointmentId) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('appointments')
+          .where('status', isEqualTo: 'confirmed')
+          .orderBy('createdAt')
+          .limit(10)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error loading waiting list',
+              style: TextStyle(color: Colors.red[700]),
+            ),
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final appointments = snapshot.data?.docs ?? [];
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 16),
+            const Text(
+              'Waiting List',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: appointments.length,
+              itemBuilder: (context, index) {
+                final appointment = appointments[index].data() as Map<String, dynamic>;
+                final appointmentId = appointments[index].id;
+                final isCurrentUser = currentAppointmentId == appointmentId;
+
+                return Card(
+                  color: isCurrentUser ? customLightBlue : null,
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: customBlue,
+                          child: Text('${index + 1}'),
+                        ),
+                        title: Text(
+                          'Appointment at ${appointment['appointmentTime']}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isCurrentUser ? 'Your appointment' : 'Estimated wait: ${(index + 1) * 15} mins',
+                            ),
+                            Text(
+                              'Date: ${_formatDate(appointment['appointmentDate'])}',
+                              style: const TextStyle(color: Colors.black54),
+                            ),
+                          ],
+                        ),
+                        trailing: isCurrentUser
+                            ? const Icon(Icons.check_circle, color: customBlue)
+                            : null,
+                      ),
+                      if (isCurrentUser) 
+                        Consumer<AppointmentProvider>(
+                          builder: (context, provider, child) => Padding(
+                            padding: const EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              bottom: 12,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                TextButton.icon(
+                                  onPressed: () => _showCancelConfirmation(
+                                    context,
+                                    appointmentId,
+                                    provider,
+                                  ),
+                                  icon: const Icon(Icons.cancel_outlined, size: 20),
+                                  label: const Text('Cancel'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.red,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                TextButton.icon(
+                                  onPressed: () => _showRescheduleDialog(
+                                    context,
+                                    appointmentId,
+                                    provider,
+                                  ),
+                                  icon: const Icon(Icons.schedule, size: 20),
+                                  label: const Text('Reschedule'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: customBlue,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPendingAppointmentMessage(Map<String, dynamic> appointmentData) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: customLightBlue.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: customBlue.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.pending_actions,
+            size: 48,
+            color: customBlue.withOpacity(0.7),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Appointment Request Pending',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: customBlue,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Your appointment request for ${appointmentData['appointmentTime']} on ${_formatDate(appointmentData['appointmentDate'])} is under review. You\'ll be notified once it\'s confirmed.',
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black87,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(dynamic date) {
+    if (date is Timestamp) {
+      return DateFormat('MMM dd, yyyy').format(date.toDate());
+    }
+    return 'Date not available';
+  }
+
+  void _showCancelConfirmation(BuildContext context, String appointmentId, AppointmentProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Appointment'),
+        content: const Text('Are you sure you want to cancel this appointment?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                Navigator.pop(context);
+                await provider.cancelAppointment(appointmentId);
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Appointment cancelled successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error cancelling appointment: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text('Yes', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRescheduleDialog(BuildContext context, String appointmentId, AppointmentProvider provider) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PatientAppointmentScreen(
+          appointmentId: appointmentId,
+          isRescheduling: true,
+        ),
+      ),
     );
   }
 
@@ -453,17 +681,32 @@ class HomeScreen extends StatelessWidget {
     IconData icon,
     VoidCallback onPressed,
   ) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 18),
-      label: Text(label),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: label == 'Cancel' ? Colors.red[100] : customLightBlue,
-        foregroundColor: label == 'Cancel' ? Colors.red : customBlue,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
+    return Consumer<AppointmentProvider>(
+      builder: (context, provider, child) {
+        return ElevatedButton.icon(
+          onPressed: provider.isLoading ? null : onPressed,
+          icon: provider.isLoading
+              ? const SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Icon(icon, size: 18),
+          label: Text(label),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: label == 'Cancel' ? Colors.red[100] : customLightBlue,
+            foregroundColor: label == 'Cancel' ? Colors.red : customBlue,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            disabledBackgroundColor: (label == 'Cancel' ? Colors.red[100] : customLightBlue)?.withOpacity(0.5),
+            disabledForegroundColor: (label == 'Cancel' ? Colors.red : customBlue).withOpacity(0.5),
+          ),
+        );
+      },
     );
   }
 }

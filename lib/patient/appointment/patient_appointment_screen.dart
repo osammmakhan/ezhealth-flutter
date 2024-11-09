@@ -6,9 +6,18 @@ import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/patient/appointment/appointment_details_screen.dart';
 import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
 import 'package:ez_health/providers/appointment_provider.dart';
+import 'package:ez_health/patient/patient_home_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PatientAppointmentScreen extends StatefulWidget {
-  const PatientAppointmentScreen({super.key});
+  final String? appointmentId;
+  final bool isRescheduling;
+
+  const PatientAppointmentScreen({
+    super.key,
+    this.appointmentId,
+    this.isRescheduling = false,
+  });
 
   @override
   State<PatientAppointmentScreen> createState() =>
@@ -34,9 +43,15 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 600;
     final isMediumScreen = screenSize.width >= 600 && screenSize.width < 1024;
-    // final isLargeScreen = screenSize.width >= 1024;
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          widget.isRescheduling ? 'Reschedule Appointment' : 'Book Appointment',
+          style: const TextStyle(color: Colors.black),
+        ),
+        // ... rest of AppBar code ...
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -66,7 +81,9 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
                       _buildStats(isSmallScreen, isMediumScreen),
                       SizedBox(height: isSmallScreen ? 30 : 50),
                       Text(
-                        'Book Appointment',
+                        widget.isRescheduling
+                            ? 'Select New Date and Time'
+                            : 'Book Appointment',
                         style: TextStyle(
                           fontSize: isSmallScreen ? 16 : 18,
                           fontWeight: FontWeight.bold,
@@ -93,11 +110,12 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
                 vertical: isSmallScreen ? 16 : 24,
               ),
               child: HorizontalBtn(
-                text: 'Make Appointment',
-                nextScreen: const AppointmentDetailsScreen(),
-                enabled: appointmentProvider.selectedTime.isNotEmpty &&
-                    appointmentProvider.selectedDate != DateTime(0),
-                onPressed: () {},
+                text: widget.isRescheduling
+                    ? 'Submit Reschedule Request'
+                    : 'Make Appointment',
+                enabled: appointmentProvider.selectedTime.isNotEmpty,
+                onPressed: () =>
+                    _handleProceedToPayment(context, appointmentProvider),
               ),
             ),
           ],
@@ -287,19 +305,18 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     );
   }
 
- Widget _buildTimePicker(AppointmentProvider provider, bool isSmallScreen, bool isMediumScreen) {
-
+  Widget _buildTimePicker(
+      AppointmentProvider provider, bool isSmallScreen, bool isMediumScreen) {
     final timeSlots = _generateTimeSlots();
     return CarouselSlider.builder(
       itemCount: timeSlots.length,
       options: CarouselOptions(
-
-                height: isSmallScreen
+        height: isSmallScreen
             ? 50
             : isMediumScreen
                 ? 60
                 : 80,
-          viewportFraction: isSmallScreen
+        viewportFraction: isSmallScreen
             ? 0.35
             : isMediumScreen
                 ? 0.25
@@ -309,7 +326,6 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
           provider.setSelectedTime(timeSlots[index]);
         },
       ),
-
       itemBuilder: (context, index, realIndex) {
         bool isSelected = provider.selectedTime == timeSlots[index];
         return OutlinedButton(
@@ -337,5 +353,42 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
         );
       },
     );
+  }
+
+  void _handleProceedToPayment(
+      BuildContext context, AppointmentProvider provider) {
+    if (widget.isRescheduling) {
+      FirebaseFirestore.instance
+          .collection('appointments')
+          .doc(widget.appointmentId)
+          .update({
+        'status': 'pending',
+        'requestedDate': provider.selectedDate,
+        'requestedTime': provider.selectedTime,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }).then((_) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const HomeScreen(),
+          ),
+          (route) => false,
+        );
+      }).catchError((error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error submitting reschedule request: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      });
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AppointmentDetailsScreen(),
+        ),
+      );
+    }
   }
 }

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'providers/appointment_provider.dart';
 import 'providers/payment_provider.dart';
 import 'secret.dart';
+import 'services/firebase_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,8 +22,9 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AppointmentProvider()),
         ChangeNotifierProvider(create: (_) => PaymentProvider()),
+        Provider<FirebaseService>(create: (_) => FirebaseService()),
       ],
-      child: MyApp(),
+      child: const MyApp(),
     ),
   );
 }

@@ -68,29 +68,11 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
     return true;
   }
 
-  void _handleProceedToPayment(
-      BuildContext context, AppointmentProvider provider) {
-    // No need because we don't allow the user to proceed if the form is not valid
-
-    // if (!_isFormValid(provider)) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(
-    //       content: Text('Please fill in all required fields'),
-    //       backgroundColor: Colors.red,
-    //     ),
-    //   );
-    //   return;
-    // }
-
-    // Form is valid, we can proceed
-    print('Appointment details:');
-    print('Booking for: ${provider.bookingFor}');
-    if (provider.bookingFor == 'Other') {
-      print('Other person name: ${_otherPersonNameController.text}');
-    }
-    print('Gender: ${provider.gender}');
-    print('Age: ${provider.age}');
-    print('Problem: ${provider.problemDescription}');
+  void _handleProceedToPayment(BuildContext context, AppointmentProvider provider) {
+    // Simply navigate to payment screen
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const PaymentMethodScreen()),
+    );
   }
 
   @override
@@ -216,7 +198,6 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
               ),
               child: HorizontalBtn(
                 text: 'Process to Payment',
-                nextScreen: const PaymentMethodScreen(),
                 enabled: isFormValid,
                 onPressed: () =>
                     _handleProceedToPayment(context, appointmentProvider),
