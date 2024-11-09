@@ -78,42 +78,119 @@ class AdminDashboardScreen extends StatelessWidget {
   }
 
   Widget _buildAppointmentsList(bool isSmallScreen) {
-    return Expanded(
-      child: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('appointments')
-            .orderBy('appointmentDate', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Center(child: Text('Something went wrong'));
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('appointments')
+          .orderBy('createdAt', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(child: Text('Something went wrong'));
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final appointments = snapshot.data?.docs ?? [];
+        
+        final Map<String, List<QueryDocumentSnapshot>> groupedAppointments = {
+          'pending': [],
+          'confirmed': [],
+          'in_process': [],
+          'completed': [],
+          'cancelled': [],
+        };
+
+        for (var doc in appointments) {
+          final data = doc.data() as Map<String, dynamic>;
+          final status = data['status'] as String? ?? 'pending';
+          final isStarted = data['isStarted'] as bool? ?? false;
+          
+          if (status == 'confirmed' && isStarted) {
+            groupedAppointments['in_process']!.add(doc);
+          } else {
+            groupedAppointments[status]?.add(doc);
           }
+        }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final appointments = snapshot.data?.docs ?? [];
-
-          if (appointments.isEmpty) {
-            return const Center(child: Text('No appointments found'));
-          }
-
-          return ListView.builder(
-            shrinkWrap: true,
-            padding: const EdgeInsets.all(16),
-            itemCount: appointments.length,
-            itemBuilder: (context, index) {
-              final appointment = appointments[index].data() as Map<String, dynamic>;
-              return _buildAppointmentCard(
-                context,
-                appointment,
-                appointments[index].id,
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            if (groupedAppointments['pending']!.isNotEmpty) ...[
+              _buildSectionHeader('Pending Appointments', Colors.orange),
+              ...groupedAppointments['pending']!.map((doc) => _buildAppointmentCard(
+                context, 
+                doc.data() as Map<String, dynamic>, 
+                doc.id, 
                 isSmallScreen,
-              );
-            },
-          );
-        },
+              )),
+            ],
+            if (groupedAppointments['confirmed']!.isNotEmpty) ...[
+              _buildSectionHeader('Confirmed Appointments', Colors.green),
+              ...groupedAppointments['confirmed']!.map((doc) => _buildAppointmentCard(
+                context, 
+                doc.data() as Map<String, dynamic>, 
+                doc.id, 
+                isSmallScreen,
+              )),
+            ],
+            if (groupedAppointments['in_process']!.isNotEmpty) ...[
+              _buildSectionHeader('In Process', customBlue),
+              ...groupedAppointments['in_process']!.map((doc) => _buildAppointmentCard(
+                context, 
+                doc.data() as Map<String, dynamic>, 
+                doc.id, 
+                isSmallScreen,
+              )),
+            ],
+            if (groupedAppointments['completed']!.isNotEmpty) ...[
+              _buildSectionHeader('Completed Appointments', Colors.grey),
+              ...groupedAppointments['completed']!.map((doc) => _buildAppointmentCard(
+                context, 
+                doc.data() as Map<String, dynamic>, 
+                doc.id, 
+                isSmallScreen,
+              )),
+            ],
+            if (groupedAppointments['cancelled']!.isNotEmpty) ...[
+              _buildSectionHeader('Cancelled Appointments', Colors.red),
+              ...groupedAppointments['cancelled']!.map((doc) => _buildAppointmentCard(
+                context, 
+                doc.data() as Map<String, dynamic>, 
+                doc.id, 
+                isSmallScreen,
+              )),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSectionHeader(String title, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 24,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

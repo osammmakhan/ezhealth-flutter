@@ -152,6 +152,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       final appointmentDate = appointment['appointmentDate'] as Timestamp?;
       final appointmentTime = appointment['appointmentTime'] ?? 'Not specified';
       final isStarted = appointment['isStarted'] ?? false;
+      final tokenNumber = appointment['tokenNumber']?.toString().padLeft(2, '0') ?? 'N/A';
 
       return Card(
         margin: const EdgeInsets.only(bottom: 16),
@@ -165,7 +166,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                 leading: CircleAvatar(
                   backgroundColor: customLightBlue,
                   child: Text(
-                    patientName[0].toUpperCase(),
+                    tokenNumber,
                     style: const TextStyle(color: customBlue),
                   ),
                 ),
