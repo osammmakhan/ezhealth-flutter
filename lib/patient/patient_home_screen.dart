@@ -274,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
       stream: FirebaseFirestore.instance
           .collection('appointments')
           .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-          .where('status', whereIn: ['confirmed', 'pending'])
+          .where('status', whereIn: ['confirmed', 'pending', 'cancelled'])
           .orderBy('createdAt', descending: true)
           .limit(1)
           .snapshots(),
@@ -285,23 +285,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // Check for reschedule request or pending appointment
         if (provider.hasRescheduleRequest) {
-          return _buildRescheduleRequestMessage();
-        }
-
-        // Even if there's an error or no data, show the initial home screen
-        if (!snapshot.hasData || snapshot.data?.docs.isEmpty == true) {
-          return _buildInitialHomeScreen(context);
-        }
-
-        // Get the most recent active appointment
-        final activeAppointment = snapshot.data?.docs.first;
-        if (activeAppointment != null) {
-          final appointmentData = activeAppointment.data() as Map<String, dynamic>;
-          // Update the provider without notifying listeners
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            provider.setAppointmentIdSilently(activeAppointment.id);
-          });
-          
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -314,10 +297,46 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
               _buildDoctorCard(context, true),
-              // Add pending appointment message if status is pending
-              if (appointmentData['status'] == 'pending')
+              _buildRescheduleRequestMessage(),
+            ],
+          );
+        }
+
+        // Even if there's an error or no data, show the initial home screen
+        if (!snapshot.hasData || snapshot.data?.docs.isEmpty == true) {
+          return _buildInitialHomeScreen(context);
+        }
+
+        // Get the most recent active appointment
+        final activeAppointment = snapshot.data?.docs.first;
+        if (activeAppointment != null) {
+          final appointmentData = activeAppointment.data() as Map<String, dynamic>;
+          final status = appointmentData['status'] as String;
+
+
+          // Update the provider without notifying listeners
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            provider.setAppointmentIdSilently(activeAppointment.id);
+          });
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Your Doctor',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildDoctorCard(context, status != 'cancelled'),
+              if (status == 'pending')
                 _buildPendingAppointmentMessage(appointmentData),
-              if (appointmentData['status'] == 'confirmed')
+              if (status == 'cancelled' &&
+                  appointmentData['cancelledBy'] == 'admin')
+                _buildAdminCancelledMessage(appointmentData),
+              if (status == 'confirmed')
                 _buildWaitingList(provider.appointmentId),
             ],
           );
@@ -540,6 +559,47 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 8),
           Text(
             'Your appointment request for ${appointmentData['appointmentTime']} on ${_formatDate(appointmentData['appointmentDate'])} is under review. You\'ll be notified once it\'s confirmed.',
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black87,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminCancelledMessage(Map<String, dynamic> appointmentData) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.cancel_outlined,
+            size: 48,
+            color: Colors.red.withOpacity(0.7),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Appointment Cancelled by Admin',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.red,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Your appointment for ${appointmentData['appointmentTime']} on ${_formatDate(appointmentData['appointmentDate'])} has been cancelled by the admin. Please book a new appointment or contact the clinic for more information.',
             style: const TextStyle(
               fontSize: 14,
               color: Colors.black87,
