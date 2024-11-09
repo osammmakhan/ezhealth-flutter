@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/patient/patient_home_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ez_health/admin/admin_dashboard_screen.dart';
+import 'package:ez_health/doctor/doctor_home_screen.dart';
 
 // TODO: Social Login
 // TODO: Context Based Login
@@ -22,6 +25,43 @@ class _AuthScreenState extends State<AuthScreen> {
     setState(() {
       isLogin = !isLogin;
     });
+  }
+
+  Future<UserCredential> _handleAuth(String email, String password, {String? name}) async {
+    try {
+      UserCredential userCredential;
+      if (isLogin) {
+        userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+      } else {
+        // Create user with email and password
+        userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        // Create user document in Firestore with default role
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({
+          'name': name ?? '',
+          'email': email,
+          'role': 'patient', // Default role for new users
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        // Update user profile with name if provided
+        if (name != null) {
+          await userCredential.user?.updateDisplayName(name);
+        }
+      }
+      return userCredential;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   @override
@@ -61,38 +101,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 // Auth Form
                 AuthWidget(
                   isLogin: isLogin,
-                  onSubmit: (email, password, {String? name}) async {
-                    try {
-                      if (isLogin) {
-                        await FirebaseAuth.instance.signInWithEmailAndPassword(
-                          email: email,
-                          password: password,
-                        );
-                      } else {
-                        // Create user with email and password
-                        UserCredential userCredential = await FirebaseAuth
-                            .instance
-                            .createUserWithEmailAndPassword(
-                          email: email,
-                          password: password,
-                        );
-                        // Update user profile with name if provided
-                        if (name != null) {
-                          await userCredential.user?.updateDisplayName(name);
-                        }
-                      }
-                      // Navigate to the Doctor/Patient/Admin Screen based on the credentials
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                            builder: (context) => const HomeScreen()),
-                      );
-                    } on FirebaseAuthException catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(e.message ?? 'An error occurred')),
-                      );
-                    }
-                  },
+                  onSubmit: _handleAuth,
                 ),
                 const SizedBox(height: 40), // Adjusted spacing
                 // Social Login Section
@@ -368,11 +377,58 @@ class _AuthWidgetState extends State<AuthWidget> {
         _isLoading = true;
       });
       try {
-        await widget.onSubmit(
+        UserCredential userCredential = await widget.onSubmit(
           _emailController.text.trim(),
           _passwordController.text.trim(),
           name: !widget.isLogin ? _nameController.text.trim() : null,
         );
+
+        // Ensure user document exists in Firestore
+        if (!widget.isLogin) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userCredential.user!.uid)
+              .set({
+            'name': _nameController.text.trim(),
+            'email': _emailController.text.trim(),
+            'role': 'patient',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+
+        // Get user role from Firestore
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .get();
+
+        if (!mounted) return;
+
+        // Navigate based on user role
+        final role = userDoc.data()?['role'] ?? 'patient';
+        switch (role) {
+          case 'admin':
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+            );
+            break;
+          case 'doctor':
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const DoctorHomeScreen()),
+            );
+            break;
+          default:
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            );
+        }
+      } catch (e) {
+        print('Error during authentication: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${e.toString()}')),
+          );
+        }
       } finally {
         if (mounted) {
           setState(() {

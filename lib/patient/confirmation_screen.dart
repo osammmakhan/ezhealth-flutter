@@ -4,54 +4,77 @@ import 'package:ez_health/patient/patient_home_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:ez_health/providers/appointment_provider.dart';
 import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ConfirmationScreen extends StatelessWidget {
   const ConfirmationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final appointmentProvider =
-        Provider.of<AppointmentProvider>(context, listen: false);
+    return Consumer<AppointmentProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    // Make sure the appointment time is set
-    if (appointmentProvider.selectedTime.isEmpty) {
-      appointmentProvider.setSelectedTime('Your selected time here');
-    }
+        final screenSize = MediaQuery.of(context).size;
+        final isSmallScreen = screenSize.width < 600;
 
-    final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width < 600;
+        return Scaffold(
+          body: SafeArea(
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('appointments')
+                  .doc(provider.appointmentId)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Something went wrong'));
+                }
 
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: isSmallScreen ? double.infinity : 600,
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(isSmallScreen ? 20.0 : 32.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(height: isSmallScreen ? 40 : 60),
-                    _buildSuccessIcon(isSmallScreen),
-                    SizedBox(height: isSmallScreen ? 30 : 40),
-                    _buildHeader(isSmallScreen),
-                    SizedBox(height: isSmallScreen ? 40 : 50),
-                    _buildAppointmentCard(
-                      appointmentProvider: appointmentProvider,
-                      isSmallScreen: isSmallScreen,
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final appointmentData =
+                    snapshot.data?.data() as Map<String, dynamic>?;
+                if (appointmentData == null) {
+                  return const Center(child: Text('Appointment not found'));
+                }
+
+                return SingleChildScrollView(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: isSmallScreen ? double.infinity : 600,
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(isSmallScreen ? 20.0 : 32.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(height: isSmallScreen ? 40 : 60),
+                            _buildSuccessIcon(isSmallScreen),
+                            SizedBox(height: isSmallScreen ? 30 : 40),
+                            _buildHeader(isSmallScreen),
+                            SizedBox(height: isSmallScreen ? 40 : 50),
+                            _buildAppointmentCard(
+                              appointmentProvider: provider,
+                              isSmallScreen: isSmallScreen,
+                            ),
+                            SizedBox(height: isSmallScreen ? 40 : 50),
+                            _buildDoneButton(context),
+                          ],
+                        ),
+                      ),
                     ),
-                    SizedBox(height: isSmallScreen ? 40 : 50),
-                    _buildDoneButton(context),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -116,37 +139,74 @@ class ConfirmationScreen extends StatelessWidget {
     required AppointmentProvider appointmentProvider,
     required bool isSmallScreen,
   }) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(isSmallScreen ? 20 : 28),
-        child: Column(
-          children: [
-            _buildDoctorInfo(isSmallScreen),
-            SizedBox(height: isSmallScreen ? 24 : 32),
-            _buildDetailRow(
-                'Date',
-                '${appointmentProvider.selectedDate.day.toString().padLeft(2, '0')}-'
-                    '${appointmentProvider.selectedDate.month.toString().padLeft(2, '0')}-'
-                    '${appointmentProvider.selectedDate.year}',
-                    isSmallScreen),
-            SizedBox(height: isSmallScreen ? 15 : 20),
-            _buildDetailRow('Time', appointmentProvider.selectedTime, isSmallScreen),
-            SizedBox(height: isSmallScreen ? 15 : 20),
-            _buildDetailRow('Location', 'Hyderabad, Pakistan', isSmallScreen),
-            Divider(height: isSmallScreen ? 30 : 40),
-            _buildDetailRow(
-                'Reference Number', appointmentProvider.referenceNumber, isSmallScreen),
-            SizedBox(height: isSmallScreen ? 15 : 20),
-            _buildDetailRow(
-                'Ticket Token', appointmentProvider.appointmentId, isSmallScreen),
-          ],
-        ),
-      ),
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('appointments')
+          .doc(appointmentProvider.appointmentId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(child: Text('Something went wrong'));
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final appointmentData = snapshot.data?.data() as Map<String, dynamic>?;
+        if (appointmentData == null) {
+          return const Center(child: Text('Appointment not found'));
+        }
+
+        return Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(isSmallScreen ? 20 : 28),
+            child: Column(
+              children: [
+                _buildDoctorInfo(isSmallScreen),
+                SizedBox(height: isSmallScreen ? 24 : 32),
+                _buildDetailRow(
+                  'Date',
+                  _formatDate(appointmentData['appointmentDate'] as Timestamp),
+                  isSmallScreen,
+                ),
+                SizedBox(height: isSmallScreen ? 15 : 20),
+                _buildDetailRow(
+                  'Time',
+                  appointmentData['appointmentTime'] as String,
+                  isSmallScreen,
+                ),
+                SizedBox(height: isSmallScreen ? 15 : 20),
+                _buildDetailRow('Location', 'Hyderabad, Pakistan', isSmallScreen),
+                Divider(height: isSmallScreen ? 30 : 40),
+                _buildDetailRow(
+                  'Reference Number',
+                  appointmentData['referenceNumber'] as String,
+                  isSmallScreen,
+                ),
+                SizedBox(height: isSmallScreen ? 15 : 20),
+                _buildDetailRow(
+                  'Token Number',
+                  appointmentData['appointmentId'] as String,
+                  isSmallScreen,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
+  }
+
+  String _formatDate(Timestamp timestamp) {
+    final date = timestamp.toDate();
+    return '${date.day.toString().padLeft(2, '0')}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.year}';
   }
 
   Widget _buildDoctorInfo(bool isSmallScreen) {
@@ -177,7 +237,7 @@ class ConfirmationScreen extends StatelessWidget {
               Row(
                 children: [
                   Icon(Icons.star, color: Colors.amber, size: isSmallScreen ? 16 : 20 ),
-                  Text(
+                  const Text(
                     ' 4.9',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,

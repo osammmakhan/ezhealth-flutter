@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ez_health/patient/confirmation_screen.dart';
+// import 'package:ez_health/patient/confirmation_screen.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/providers/payment_provider.dart';
 import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
 import 'package:ez_health/providers/appointment_provider.dart';
+import 'package:ez_health/patient/appointment_request_success_screen.dart';
 
 class PaymentDetailsScreen extends StatefulWidget {
   const PaymentDetailsScreen({super.key});
@@ -309,29 +310,70 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
                 ),
                 Padding(
                   padding: EdgeInsets.all(isSmallScreen ? 16.0 : 24.0),
-                  child: HorizontalBtn(
-                    text: 'Pay & Confirm',
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        // Generate appointment ID before navigation
-                        final appointmentProvider =
-                            Provider.of<AppointmentProvider>(context,
-                                listen: false);
-                        appointmentProvider.confirmAppointment();
+                  child: Consumer<AppointmentProvider>(
+                    builder: (context, provider, child) {
+                      return HorizontalBtn(
+                        text: provider.isLoading ? 'Processing...' : 'Pay & Confirm',
+                        enabled: !provider.isLoading,
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            try {
+                              final paymentProvider = Provider.of<PaymentProvider>(context, listen: false);
 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ConfirmationScreen(),
-                          ),
-                        );
-                      }
+                              // Process payment first
+                              await provider.processPayment(
+                                cardNumber: paymentProvider.cardNumber,
+                                expiryDate: paymentProvider.expiryDate,
+                                cvv: paymentProvider.cvv,
+                                cardHolderName: paymentProvider.cardHolderName,
+                              );
+
+                              // Create pending appointment request
+                              await provider.createAppointment();
+
+                              if (!context.mounted) return;
+                              
+                              // Navigate to success screen
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const AppointmentRequestSuccessScreen(),
+                                ),
+                                (route) => false,
+                              );
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              
+                              // Show error message
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error: ${e.toString()}'),
+                                  backgroundColor: Colors.red,
+                                  duration: const Duration(seconds: 3),
+                                ),
+                              );
+                              
+                              // Still navigate to success screen if appointment was created
+                              if (provider.appointmentId.isNotEmpty) {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const AppointmentRequestSuccessScreen(),
+                                  ),
+                                  (route) => false,
+                                );
+                              }
+                            }
+                          }
+                        },
+                      );
                     },
                   ),
                 ),
               ],
             ),
           ),
-        ));
+        )
+        );
   }
 }
