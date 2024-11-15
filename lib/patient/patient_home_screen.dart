@@ -22,7 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
     // Initialize streams after the widget is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        Provider.of<AppointmentProvider>(context, listen: false).initializeStreams();
+        Provider.of<AppointmentProvider>(context, listen: false)
+            .initializeStreams();
       }
     });
   }
@@ -237,14 +238,16 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<AppointmentProvider>(
       builder: (context, provider, child) {
         return ElevatedButton(
-          onPressed: provider.isLoading ? null : () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const PatientAppointmentScreen(),
-              ),
-            );
-          },
+          onPressed: provider.isLoading
+              ? null
+              : () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PatientAppointmentScreen(),
+                    ),
+                  );
+                },
           style: ElevatedButton.styleFrom(
             backgroundColor: customBlue,
             padding: const EdgeInsets.symmetric(vertical: 15),
@@ -270,7 +273,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildAppointmentSection(BuildContext context, AppointmentProvider provider) {
+  Widget _buildAppointmentSection(
+      BuildContext context, AppointmentProvider provider) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('appointments')
@@ -311,9 +315,9 @@ class _HomeScreenState extends State<HomeScreen> {
         // Get the most recent active appointment
         final activeAppointment = snapshot.data?.docs.first;
         if (activeAppointment != null) {
-          final appointmentData = activeAppointment.data() as Map<String, dynamic>;
+          final appointmentData =
+              activeAppointment.data() as Map<String, dynamic>;
           final status = appointmentData['status'] as String;
-
 
           // Update the provider without notifying listeners
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -429,126 +433,113 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         final appointments = snapshot.data?.docs ?? [];
-        
+
+        // Find the index of current user's appointment
+        final currentUserIndex =
+            appointments.indexWhere((doc) => doc.id == currentAppointmentId);
+
+        // Calculate wait time once for the current user
+        String getCurrentUserWaitTime() {
+          if (currentUserIndex == -1) return '';
+          if (currentUserIndex == 0) return 'Next in line';
+
+          // Each appointment takes 30 minutes
+          final waitTimeMinutes = currentUserIndex * 30;
+
+          // Format the wait time
+          if (waitTimeMinutes >= 60) {
+            final hours = waitTimeMinutes ~/ 60;
+            final minutes = waitTimeMinutes % 60;
+
+            if (minutes == 0) {
+              return 'Estimated wait: $hours ${hours == 1 ? 'Hour' : 'Hours'}';
+            } else {
+              return 'Estimated wait: $hours ${hours == 1 ? 'Hour' : 'Hours'} $minutes Minutes';
+            }
+          }
+
+          return 'Estimated wait: $waitTimeMinutes Minutes';
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 16),
-            const Text(
-              'Waiting List',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            if (currentUserIndex > 0)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  getCurrentUserWaitTime(),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: customBlue,
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: appointments.length,
               itemBuilder: (context, index) {
-                final appointment = appointments[index].data() as Map<String, dynamic>;
+                final appointment =
+                    appointments[index].data() as Map<String, dynamic>;
                 final appointmentId = appointments[index].id;
                 final isCurrentUser = currentAppointmentId == appointmentId;
+                final tokenNumber =
+                    appointment['tokenNumber']?.toString().padLeft(2, '0') ??
+                        'N/A';
 
-                return Card(
-                  color: isCurrentUser ? customLightBlue : null,
-                  elevation: isCurrentUser ? 4 : 1,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: InkWell(
-                    onTap: isCurrentUser ? () {
-                      final appointmentProvider = Provider.of<AppointmentProvider>(context, listen: false);
-                      appointmentProvider.setAppointmentIdSilently(appointmentId);
-                      
-                      Future.microtask(() {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ConfirmationScreen(),
-                          ),
-                        );
-                      });
-                    } : null,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: customBlue,
-                            child: Text('${index + 1}'),
-                          ),
-                          title: Text(
-                            'Appointment at ${appointment['appointmentTime']}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isCurrentUser ? 'Your appointment' : 'Estimated wait: ${(index + 1) * 15} mins',
-                              ),
-                              Text(
-                                'Date: ${_formatDate(appointment['appointmentDate'])}',
-                                style: const TextStyle(color: Colors.black54),
-                              ),
-                            ],
-                          ),
-                          trailing: isCurrentUser
-                              ? Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.check_circle, color: customBlue),
-                                    const SizedBox(width: 4),
-                                    Icon(
-                                      Icons.arrow_forward_ios,
-                                      size: 16,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ],
-                                )
-                              : null,
+                return GestureDetector(
+                  onTap: () {
+                    if (isCurrentUser) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ConfirmationScreen(),
                         ),
-                        if (isCurrentUser) 
-                          Consumer<AppointmentProvider>(
-                            builder: (context, provider, child) => Padding(
-                              padding: const EdgeInsets.only(
-                                left: 16,
-                                right: 16,
-                                bottom: 12,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  TextButton.icon(
-                                    onPressed: () => _showCancelConfirmation(
-                                      context,
-                                      appointmentId,
-                                      provider,
-                                    ),
-                                    icon: const Icon(Icons.cancel_outlined, size: 20),
-                                    label: const Text('Cancel'),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: Colors.red,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  TextButton.icon(
-                                    onPressed: () => _showRescheduleDialog(
-                                      context,
-                                      appointmentId,
-                                      provider,
-                                    ),
-                                    icon: const Icon(Icons.schedule, size: 20),
-                                    label: const Text('Reschedule'),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: customBlue,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                      );
+                    }
+                  },
+                  child: Card(
+                    color: isCurrentUser ? customLightBlue : null,
+                    elevation: isCurrentUser ? 4 : 1,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: customBlue,
+                        child: Text(tokenNumber),
+                      ),
+                      title: Text(
+                        'Appointment at ${appointment['appointmentTime']}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isCurrentUser ? 'Your appointment' : '',
                           ),
-                      ],
+                          Text(
+                            'Date: ${_formatDate(appointment['appointmentDate'])}',
+                            style: const TextStyle(color: Colors.black54),
+                          ),
+                        ],
+                      ),
+                      trailing: isCurrentUser
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.check_circle,
+                                    color: customBlue),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ],
+                            )
+                          : null,
                     ),
                   ),
                 );
@@ -649,12 +640,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return 'Date not available';
   }
 
-  void _showCancelConfirmation(BuildContext context, String appointmentId, AppointmentProvider provider) {
+  void _showCancelConfirmation(BuildContext context, String appointmentId,
+      AppointmentProvider provider) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Cancel Appointment'),
-        content: const Text('Are you sure you want to cancel this appointment?'),
+        content:
+            const Text('Are you sure you want to cancel this appointment?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -689,7 +682,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showRescheduleDialog(BuildContext context, String appointmentId, AppointmentProvider provider) {
+  void _showRescheduleDialog(BuildContext context, String appointmentId,
+      AppointmentProvider provider) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -787,13 +781,17 @@ class _HomeScreenState extends State<HomeScreen> {
               : Icon(icon, size: 18),
           label: Text(label),
           style: ElevatedButton.styleFrom(
-            backgroundColor: label == 'Cancel' ? Colors.red[100] : customLightBlue,
+            backgroundColor:
+                label == 'Cancel' ? Colors.red[100] : customLightBlue,
             foregroundColor: label == 'Cancel' ? Colors.red : customBlue,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
-            disabledBackgroundColor: (label == 'Cancel' ? Colors.red[100] : customLightBlue)?.withOpacity(0.5),
-            disabledForegroundColor: (label == 'Cancel' ? Colors.red : customBlue).withOpacity(0.5),
+            disabledBackgroundColor:
+                (label == 'Cancel' ? Colors.red[100] : customLightBlue)
+                    ?.withOpacity(0.5),
+            disabledForegroundColor:
+                (label == 'Cancel' ? Colors.red : customBlue).withOpacity(0.5),
           ),
         );
       },

@@ -84,7 +84,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('appointments')
-          .where('status', whereIn: ['confirmed', 'pending'])
+          .where('status', isEqualTo: 'confirmed')
           .orderBy('appointmentDate', descending: true)
           .limit(50)
           .snapshots(),
@@ -184,13 +184,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                           : 'Date not specified',
                     ),
                     Text('Time: $appointmentTime'),
-                    Text(
-                      'Status: ${status.toUpperCase()}',
-                      style: TextStyle(
-                        color: _getStatusColor(status),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -244,19 +237,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           title: Text('Error displaying appointment'),
         ),
       );
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return Colors.green;
-      case 'pending':
-        return Colors.orange;
-      case 'confirmed':
-        return customBlue;
-      default:
-        return Colors.grey;
     }
   }
 

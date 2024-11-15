@@ -1,5 +1,6 @@
 {
   "cmake.sourceDirectory": "C:/Users/alish/Downloads/FYP/App/Trial 1/ez_health/linux",
   "IDX.aI.enableInlineCompletion": true,
-  "IDX.aI.enableCodebaseIndexing": true
+  "IDX.aI.enableCodebaseIndexing": true,
+  "cmake.ignoreCMakeListsMissing": true
 }
