@@ -383,19 +383,6 @@ class _AuthWidgetState extends State<AuthWidget> {
           name: !widget.isLogin ? _nameController.text.trim() : null,
         );
 
-        // Ensure user document exists in Firestore
-        if (!widget.isLogin) {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(userCredential.user!.uid)
-              .set({
-            'name': _nameController.text.trim(),
-            'email': _emailController.text.trim(),
-            'role': 'patient',
-            'createdAt': FieldValue.serverTimestamp(),
-          });
-        }
-
         // Get user role from Firestore
         final userDoc = await FirebaseFirestore.instance
             .collection('users')
@@ -403,6 +390,19 @@ class _AuthWidgetState extends State<AuthWidget> {
             .get();
 
         if (!mounted) return;
+
+        // Show success message for new account creation
+        if (!widget.isLogin) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created successfully! Welcome to EZ Health'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+          // Add a small delay to allow the snackbar to be visible
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
 
         // Navigate based on user role
         final role = userDoc.data()?['role'] ?? 'patient';
@@ -426,7 +426,10 @@ class _AuthWidgetState extends State<AuthWidget> {
         print('Error during authentication: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${e.toString()}')),
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       } finally {

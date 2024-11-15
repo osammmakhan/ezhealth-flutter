@@ -30,11 +30,49 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     return List.generate(7, (index) => now.add(Duration(days: index)));
   }
 
-  List<String> _generateTimeSlots() {
-    return List.generate(11, (index) {
-      final time = TimeOfDay(hour: 17 + (index ~/ 2), minute: (index % 2) * 30);
-      return time.format(context);
-    });
+  Future<List<String>> _generateTimeSlots(DateTime selectedDate) async {
+    try {
+      // Normalize the date to midnight
+      final startOfDay = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
+
+      // Query appointments for the selected date
+      final QuerySnapshot appointmentsSnapshot = await FirebaseFirestore.instance
+          .collection('appointments')
+          .where('appointmentDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('appointmentDate', isLessThan: Timestamp.fromDate(endOfDay))
+          .where('status', whereIn: ['pending', 'confirmed'])
+          .get();
+
+      // Create a set of booked time slots
+      final Set<String> bookedTimeSlots = appointmentsSnapshot.docs
+          .map((doc) => doc['appointmentTime'] as String)
+          .toSet();
+
+      // Generate all possible time slots for the clinic hours (5 PM to 10 PM)
+      final List<String> allTimeSlots = List.generate(11, (index) {
+        final time = TimeOfDay(hour: 17 + (index ~/ 2), minute: (index % 2) * 30);
+        return _formatTimeOfDay(time);
+      });
+
+      // Remove booked slots and return available ones
+      return allTimeSlots.where((slot) => !bookedTimeSlots.contains(slot)).toList();
+    } catch (e) {
+      print('Error generating time slots: $e');
+      // Return all time slots if there's an error reading appointments
+      return List.generate(11, (index) {
+        final time = TimeOfDay(hour: 17 + (index ~/ 2), minute: (index % 2) * 30);
+        return _formatTimeOfDay(time);
+      });
+    }
+  }
+
+  // Helper method to format TimeOfDay consistently
+  String _formatTimeOfDay(TimeOfDay time) {
+    final now = DateTime.now();
+    final dateTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+    final format = DateFormat.jm(); // Use 12-hour format with AM/PM
+    return format.format(dateTime);
   }
 
   @override
@@ -307,49 +345,90 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
 
   Widget _buildTimePicker(
       AppointmentProvider provider, bool isSmallScreen, bool isMediumScreen) {
-    final timeSlots = _generateTimeSlots();
-    return CarouselSlider.builder(
-      itemCount: timeSlots.length,
-      options: CarouselOptions(
-        height: isSmallScreen
-            ? 50
-            : isMediumScreen
-                ? 60
-                : 80,
-        viewportFraction: isSmallScreen
-            ? 0.35
-            : isMediumScreen
-                ? 0.25
-                : 0.2,
-        enlargeCenterPage: true,
-        onPageChanged: (index, reason) {
-          provider.setSelectedTime(timeSlots[index]);
-        },
-      ),
-      itemBuilder: (context, index, realIndex) {
-        bool isSelected = provider.selectedTime == timeSlots[index];
-        return OutlinedButton(
-          onPressed: () => provider.setSelectedTime(timeSlots[index]),
-          style: OutlinedButton.styleFrom(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            backgroundColor: isSelected ? customLightBlue : Colors.transparent,
-            side: BorderSide(
-              color: isSelected ? customBlue : Colors.grey.shade300,
-              width: isSelected ? 2.0 : 1.0,
+    return FutureBuilder<List<String>>(
+      future: _generateTimeSlots(provider.selectedDate),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: CircularProgressIndicator(),
             ),
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 12 : 16,
-              vertical: isSmallScreen ? 8 : 12,
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Text(
+                'Error loading time slots. Please try again.',
+                style: TextStyle(color: Colors.red[700]),
+              ),
             ),
+          );
+        }
+
+        final timeSlots = snapshot.data ?? [];
+
+        if (timeSlots.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Text(
+                'No available time slots for this date',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          );
+        }
+
+        // Clear selected time if it's no longer available
+        if (provider.selectedTime.isNotEmpty &&
+            !timeSlots.contains(provider.selectedTime)) {
+          provider.setSelectedTime('');
+        }
+
+        return CarouselSlider.builder(
+          itemCount: timeSlots.length,
+          options: CarouselOptions(
+            height: isSmallScreen ? 50 : isMediumScreen ? 60 : 80,
+            viewportFraction: isSmallScreen ? 0.35 : isMediumScreen ? 0.25 : 0.2,
+            enlargeCenterPage: true,
+            onPageChanged: (index, reason) {
+              provider.setSelectedTime(timeSlots[index]);
+            },
           ),
-          child: Text(
-            timeSlots[index],
-            style: TextStyle(
-              fontSize: isSmallScreen ? 14 : 16,
-              color: isSelected ? customBlue : Colors.black,
-            ),
-          ),
+          itemBuilder: (context, index, realIndex) {
+            bool isSelected = provider.selectedTime == timeSlots[index];
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 5.0),
+              child: OutlinedButton(
+                onPressed: () => provider.setSelectedTime(timeSlots[index]),
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  backgroundColor: isSelected ? customLightBlue : Colors.transparent,
+                  side: BorderSide(
+                    color: isSelected ? customBlue : Colors.grey.shade300,
+                    width: isSelected ? 2.0 : 1.0,
+                  ),
+                ),
+                child: Text(
+                  timeSlots[index],
+                  style: TextStyle(
+                    fontSize: isSmallScreen ? 14 : 16,
+                    color: isSelected ? customBlue : Colors.black,
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
