@@ -411,209 +411,263 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildWaitingList(String currentAppointmentId) {
-    // Get the start and end of the current day
-    final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day);
-    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
-
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('appointments')
-          .where('status', isEqualTo: 'confirmed')
-          .where('appointmentDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('appointmentDate', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
-          .orderBy('appointmentDate')
-          .orderBy('appointmentTime')
-          .limit(10)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(
-            child: Text(
-              'Error loading waiting list',
-              style: TextStyle(color: Colors.red[700]),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Text(
+            'Waitlist',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
-          );
-        }
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final appointments = snapshot.data?.docs ?? [];
-        
-        if (appointments.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(
-              child: Text(
-                'No appointments scheduled for today',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-              ),
-            ),
-          );
-        }
-
-        // Find the index of current user's appointment
-        final currentUserIndex =
-            appointments.indexWhere((doc) => doc.id == currentAppointmentId);
-
-        // Calculate wait time once for the current user
-        String getCurrentUserWaitTime() {
-          if (currentUserIndex == -1) return '';
-          if (currentUserIndex == 0) return 'Next in line';
-
-          // Each appointment takes 30 minutes
-          final waitTimeMinutes = currentUserIndex * 30;
-
-          // Format the wait time
-          if (waitTimeMinutes >= 60) {
-            final hours = waitTimeMinutes ~/ 60;
-            final minutes = waitTimeMinutes % 60;
-
-            if (minutes == 0) {
-              return 'Estimated wait: $hours ${hours == 1 ? 'Hour' : 'Hours'}';
-            } else {
-              return 'Estimated wait: $hours ${hours == 1 ? 'Hour' : 'Hours'} $minutes Minutes';
+          ),
+        ),
+        // Get the start and end of the selected appointment date instead of current date
+        StreamBuilder<DocumentSnapshot>(
+          // First get the current appointment details
+          stream: FirebaseFirestore.instance
+              .collection('appointments')
+              .doc(currentAppointmentId)
+              .snapshots(),
+          builder: (context, appointmentSnapshot) {
+            if (!appointmentSnapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
             }
-          }
 
-          return 'Estimated wait: $waitTimeMinutes Minutes';
-        }
+            final appointmentData =
+                appointmentSnapshot.data?.data() as Map<String, dynamic>?;
+            if (appointmentData == null) return const SizedBox.shrink();
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (currentUserIndex > 0)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  getCurrentUserWaitTime(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: customBlue,
-                  ),
-                ),
-              ),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: appointments.length,
-              itemBuilder: (context, index) {
-                final appointment =
-                    appointments[index].data() as Map<String, dynamic>;
-                final appointmentId = appointments[index].id;
-                final isCurrentUser = currentAppointmentId == appointmentId;
-                // final refNumber = appointment['referenceNumber'] ?? 'N/A';
+            // Get the appointment date
+            final appointmentDate =
+                (appointmentData['appointmentDate'] as Timestamp).toDate();
+            final startOfDay = DateTime(appointmentDate.year,
+                appointmentDate.month, appointmentDate.day);
+            final endOfDay = DateTime(appointmentDate.year,
+                appointmentDate.month, appointmentDate.day, 23, 59, 59);
 
-                return Card(
-                  color: isCurrentUser ? customLightBlue : null,
-                  elevation: isCurrentUser ? 4 : 1,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: InkWell(
-                    onTap: isCurrentUser ? () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ConfirmationScreen(),
-                        ),
-                      );
-                    } : null,
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: customBlue,
-                            child: Text(
-                              '${index + 1}',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                          title: Text(
-                            'Appointment at ${appointment['appointmentTime']}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isCurrentUser ? 'Your appointment' : '',
-                              ),
-                              Text(
-                                'Date: ${_formatDate(appointment['appointmentDate'])}',
-                                style: const TextStyle(color: Colors.black54),
-                              ),
-                            ],
-                          ),
-                          trailing: isCurrentUser
-                              ? Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.check_circle,
-                                        color: customBlue),
-                                    const SizedBox(width: 4),
-                                    Icon(
-                                      Icons.arrow_forward_ios,
-                                      size: 16,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ],
-                                )
-                              : null,
-                        ),
-                        if (isCurrentUser) 
-                          Consumer<AppointmentProvider>(
-                            builder: (context, provider, child) => Padding(
-                              padding: const EdgeInsets.only(
-                                left: 16,
-                                right: 16,
-                                bottom: 12,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  TextButton.icon(
-                                    onPressed: () => _showCancelConfirmation(
-                                      context,
-                                      appointmentId,
-                                      provider,
-                                    ),
-                                    icon: const Icon(Icons.cancel_outlined, size: 20),
-                                    label: const Text('Cancel'),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: Colors.red,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  TextButton.icon(
-                                    onPressed: () => _showRescheduleDialog(
-                                      context,
-                                      appointmentId,
-                                      provider,
-                                    ),
-                                    icon: const Icon(Icons.schedule, size: 20),
-                                    label: const Text('Reschedule'),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: customBlue,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                      ],
+            return StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('appointments')
+                  .where('status', isEqualTo: 'confirmed')
+                  .where('appointmentDate',
+                      isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+                  .where('appointmentDate',
+                      isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+                  .orderBy('appointmentTime', descending: false)
+                  .limit(10)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      'Error loading waiting list',
+                      style: TextStyle(color: Colors.red[700]),
                     ),
-                  ),
+                  );
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final appointments = snapshot.data?.docs ?? [];
+
+                if (appointments.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Center(
+                      child: Text(
+                        'No appointments scheduled for this date',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                // Find the index of current user's appointment
+                final currentUserIndex = appointments
+                    .indexWhere((doc) => doc.id == currentAppointmentId);
+
+                // Calculate wait time once for the current user
+                String getCurrentUserWaitTime() {
+                  if (currentUserIndex == -1) return '';
+                  if (currentUserIndex == 0) return 'Next in line';
+
+                  final waitTimeMinutes = currentUserIndex * 30;
+
+                  if (waitTimeMinutes >= 60) {
+                    final hours = waitTimeMinutes ~/ 60;
+                    final minutes = waitTimeMinutes % 60;
+
+                    if (minutes == 0) {
+                      return 'Estimated wait: $hours ${hours == 1 ? 'Hour' : 'Hours'}';
+                    } else {
+                      return 'Estimated wait: $hours ${hours == 1 ? 'Hour' : 'Hours'} $minutes Minutes';
+                    }
+                  }
+
+                  return 'Estimated wait: $waitTimeMinutes Minutes';
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (currentUserIndex > 0)
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          getCurrentUserWaitTime(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: customBlue,
+                          ),
+                        ),
+                      ),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: appointments.length,
+                      itemBuilder: (context, index) {
+                        final appointment =
+                            appointments[index].data() as Map<String, dynamic>;
+                        final appointmentId = appointments[index].id;
+                        final isCurrentUser =
+                            currentAppointmentId == appointmentId;
+                        final userId = appointment['userId'] as String?;
+                        final isCurrentUserAppointment =
+                            userId == FirebaseAuth.instance.currentUser?.uid;
+
+                        return Card(
+                          color: isCurrentUser ? customLightBlue : null,
+                          elevation: isCurrentUser ? 4 : 1,
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          child: InkWell(
+                            onTap: isCurrentUserAppointment
+                                ? () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ConfirmationScreen(),
+                                      ),
+                                    );
+                                  }
+                                : null,
+                            child: Column(
+                              children: [
+                                ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: customBlue,
+                                    child: Text(
+                                      '${index + 1}',
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                  title: Text(
+                                    'Appointment at ${appointment['appointmentTime']}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        isCurrentUserAppointment
+                                            ? 'Your appointment'
+                                            : '',
+                                      ),
+                                      Text(
+                                        'Date: ${_formatDate(appointment['appointmentDate'])}',
+                                        style: const TextStyle(
+                                            color: Colors.black54),
+                                      ),
+                                    ],
+                                  ),
+                                  trailing: isCurrentUserAppointment
+                                      ? Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.check_circle,
+                                                color: customBlue),
+                                            const SizedBox(width: 4),
+                                            Icon(
+                                              Icons.arrow_forward_ios,
+                                              size: 16,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ],
+                                        )
+                                      : null,
+                                ),
+                                if (isCurrentUserAppointment)
+                                  Consumer<AppointmentProvider>(
+                                    builder: (context, provider, child) =>
+                                        Padding(
+                                      padding: const EdgeInsets.only(
+                                        left: 16,
+                                        right: 16,
+                                        bottom: 12,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          TextButton.icon(
+                                            onPressed: () =>
+                                                _showCancelConfirmation(
+                                              context,
+                                              appointmentId,
+                                              provider,
+                                            ),
+                                            icon: const Icon(
+                                                Icons.cancel_outlined,
+                                                size: 20),
+                                            label: const Text('Cancel'),
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: Colors.red,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          TextButton.icon(
+                                            onPressed: () =>
+                                                _showRescheduleDialog(
+                                              context,
+                                              appointmentId,
+                                              provider,
+                                            ),
+                                            icon: const Icon(Icons.schedule,
+                                                size: 20),
+                                            label: const Text('Reschedule'),
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: customBlue,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 );
               },
-            ),
-          ],
-        );
-      },
+            );
+          },
+        ),
+      ],
     );
   }
 
