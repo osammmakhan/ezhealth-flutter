@@ -159,7 +159,6 @@ class ConfirmationScreen extends StatelessWidget {
         }
 
         final referenceNumber = appointmentData['referenceNumber'] as String? ?? 'N/A';
-        final tokenNumber = appointmentData['tokenNumber']?.toString().padLeft(2, '0') ?? 'N/A';
         final appointmentTime = appointmentData['appointmentTime'] as String? ?? 'N/A';
         final appointmentDate = appointmentData['appointmentDate'] as Timestamp?;
 
@@ -190,13 +189,6 @@ class ConfirmationScreen extends StatelessWidget {
                 SizedBox(height: isSmallScreen ? 15 : 20),
                 _buildDetailRow('Location', 'Hyderabad, Pakistan', isSmallScreen),
                 Divider(height: isSmallScreen ? 30 : 40),
-                _buildDetailRow(
-                  'Token Number',
-                  tokenNumber,
-                  isSmallScreen,
-                  isHighlighted: true,
-                ),
-                SizedBox(height: isSmallScreen ? 15 : 20),
                 _buildDetailRow(
                   'Reference Number',
                   referenceNumber,

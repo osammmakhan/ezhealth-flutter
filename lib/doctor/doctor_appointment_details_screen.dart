@@ -72,8 +72,6 @@ class DoctorAppointmentDetailsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // _buildInfoRow('Appointment ID', data['appointmentNumber'] ?? 'N/A', isSmallScreen),
-            _buildInfoRow('Token Number', data['tokenNumber']?.toString().padLeft(2, '0') ?? 'N/A', isSmallScreen),
-            const SizedBox(height: 12),
             _buildInfoRow('Reference', data['referenceNumber'] ?? 'N/A', isSmallScreen),
             const SizedBox(height: 12),
             _buildInfoRow('Date', _formatDate(data['appointmentDate']), isSmallScreen),
