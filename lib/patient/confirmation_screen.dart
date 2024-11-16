@@ -158,7 +158,7 @@ class ConfirmationScreen extends StatelessWidget {
           return const Center(child: Text('Appointment not found'));
         }
 
-        final referenceNumber = appointmentData['referenceNumber'] as String? ?? 'N/A';
+        final referenceNumber = appointmentData['appointmentNumber'] as String? ?? 'N/A';
         final appointmentTime = appointmentData['appointmentTime'] as String? ?? 'N/A';
         final appointmentDate = appointmentData['appointmentDate'] as Timestamp?;
 
@@ -227,7 +227,7 @@ class ConfirmationScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Dr. Osama Khan',
+                'Dr. Ahsan Siddiqui',
                 style: TextStyle(
                   fontSize: isSmallScreen ? 18 : 22,
                   fontWeight: FontWeight.bold,

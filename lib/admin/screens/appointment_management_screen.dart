@@ -251,7 +251,7 @@ class _AppointmentManagementScreenState extends State<AppointmentManagementScree
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Ref: ${appointment['referenceNumber']}',
+              'Ref: ${appointment['appointmentNumber']}',
               style: TextStyle(color: Colors.grey[600]),
             ),
           ],

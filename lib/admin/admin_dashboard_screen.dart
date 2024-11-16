@@ -232,7 +232,7 @@ class AdminDashboardScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Ref: ${appointment['referenceNumber']}',
+                        'Ref: ${appointment['appointmentNumber']}',
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 13,

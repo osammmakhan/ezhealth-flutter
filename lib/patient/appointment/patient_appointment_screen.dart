@@ -33,16 +33,18 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
   Future<List<String>> _generateTimeSlots(DateTime selectedDate) async {
     try {
       // Normalize the date to midnight
-      final startOfDay = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+      final startOfDay =
+          DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
       // Query appointments for the selected date
-      final QuerySnapshot appointmentsSnapshot = await FirebaseFirestore.instance
+      final QuerySnapshot appointmentsSnapshot = await FirebaseFirestore
+          .instance
           .collection('appointments')
-          .where('appointmentDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('appointmentDate',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
           .where('appointmentDate', isLessThan: Timestamp.fromDate(endOfDay))
-          .where('status', whereIn: ['pending', 'confirmed'])
-          .get();
+          .where('status', whereIn: ['pending', 'confirmed']).get();
 
       // Create a set of booked time slots
       final Set<String> bookedTimeSlots = appointmentsSnapshot.docs
@@ -51,17 +53,21 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
 
       // Generate all possible time slots for the clinic hours (5 PM to 10 PM)
       final List<String> allTimeSlots = List.generate(11, (index) {
-        final time = TimeOfDay(hour: 17 + (index ~/ 2), minute: (index % 2) * 30);
+        final time =
+            TimeOfDay(hour: 17 + (index ~/ 2), minute: (index % 2) * 30);
         return _formatTimeOfDay(time);
       });
 
       // Remove booked slots and return available ones
-      return allTimeSlots.where((slot) => !bookedTimeSlots.contains(slot)).toList();
+      return allTimeSlots
+          .where((slot) => !bookedTimeSlots.contains(slot))
+          .toList();
     } catch (e) {
       print('Error generating time slots: $e');
       // Return all time slots if there's an error reading appointments
       return List.generate(11, (index) {
-        final time = TimeOfDay(hour: 17 + (index ~/ 2), minute: (index % 2) * 30);
+        final time =
+            TimeOfDay(hour: 17 + (index ~/ 2), minute: (index % 2) * 30);
         return _formatTimeOfDay(time);
       });
     }
@@ -70,7 +76,8 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
   // Helper method to format TimeOfDay consistently
   String _formatTimeOfDay(TimeOfDay time) {
     final now = DateTime.now();
-    final dateTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+    final dateTime =
+        DateTime(now.year, now.month, now.day, time.hour, time.minute);
     final format = DateFormat.jm(); // Use 12-hour format with AM/PM
     return format.format(dateTime);
   }
@@ -205,7 +212,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
-          'Dr. Osama Khan',
+          'Dr. Ahsan Siddiqui',
           style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
@@ -285,8 +292,16 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     return CarouselSlider.builder(
       itemCount: weekDays.length,
       options: CarouselOptions(
-        height: isSmallScreen ? 50 : isMediumScreen ? 60 : 80,
-        viewportFraction: isSmallScreen ? 0.35 : isMediumScreen ? 0.25 : 0.2,
+        height: isSmallScreen
+            ? 50
+            : isMediumScreen
+                ? 60
+                : 80,
+        viewportFraction: isSmallScreen
+            ? 0.35
+            : isMediumScreen
+                ? 0.25
+                : 0.2,
         enlargeCenterPage: true,
         enlargeFactor: 0.3,
         enableInfiniteScroll: true,
@@ -305,7 +320,8 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              backgroundColor: isSelected ? customLightBlue : Colors.transparent,
+              backgroundColor:
+                  isSelected ? customLightBlue : Colors.transparent,
               side: BorderSide(
                 color: isSelected ? customBlue : Colors.grey.shade300,
                 width: isSelected ? 2.0 : 1.0,
@@ -346,8 +362,9 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
 
   Future<List<String>> _getTimeSlotsWithCache(DateTime selectedDate) async {
     // Compare only the date part, not the time
-    final compareDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
-    
+    final compareDate =
+        DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+
     // Return cached results if available for the same date
     if (_lastFetchedDate != null &&
         _lastFetchedDate!.isAtSameMomentAs(compareDate) &&
@@ -357,11 +374,11 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
 
     // Fetch new time slots
     final timeSlots = await _generateTimeSlots(selectedDate);
-    
+
     // Update cache
     _lastFetchedDate = compareDate;
     _cachedTimeSlots[compareDate] = timeSlots;
-    
+
     return timeSlots;
   }
 
@@ -378,7 +395,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
             provider.selectedDate.month,
             provider.selectedDate.day,
           );
-          
+
           if (_cachedTimeSlots.containsKey(cachedDate)) {
             return _buildTimeSlotCarousel(
               _cachedTimeSlots[cachedDate]!,
@@ -387,7 +404,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
               isMediumScreen,
             );
           }
-          
+
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(20.0),
@@ -409,7 +426,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
         }
 
         final timeSlots = snapshot.data ?? [];
-        
+
         if (timeSlots.isEmpty) {
           return const Center(
             child: Padding(
@@ -446,13 +463,21 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     return CarouselSlider.builder(
       itemCount: timeSlots.length,
       options: CarouselOptions(
-        height: isSmallScreen ? 50 : isMediumScreen ? 60 : 80,
-        viewportFraction: isSmallScreen ? 0.35 : isMediumScreen ? 0.25 : 0.2,
+        height: isSmallScreen
+            ? 50
+            : isMediumScreen
+                ? 60
+                : 80,
+        viewportFraction: isSmallScreen
+            ? 0.35
+            : isMediumScreen
+                ? 0.25
+                : 0.2,
         enlargeCenterPage: true,
         enlargeFactor: 0.3,
         enableInfiniteScroll: true,
-        initialPage: timeSlots.indexOf(provider.selectedTime) != -1 
-            ? timeSlots.indexOf(provider.selectedTime) 
+        initialPage: timeSlots.indexOf(provider.selectedTime) != -1
+            ? timeSlots.indexOf(provider.selectedTime)
             : 0,
         onPageChanged: (index, reason) {
           provider.setSelectedTime(timeSlots[index]);
@@ -468,7 +493,8 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              backgroundColor: isSelected ? customLightBlue : Colors.transparent,
+              backgroundColor:
+                  isSelected ? customLightBlue : Colors.transparent,
               side: BorderSide(
                 color: isSelected ? customBlue : Colors.grey.shade300,
                 width: isSelected ? 2.0 : 1.0,

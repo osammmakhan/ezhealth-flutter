@@ -152,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 children: [
                   const Text(
-                    'Dr. Osama',
+                    'Dr. Ahsan',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
