@@ -76,6 +76,11 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final appointmentProvider = Provider.of<AppointmentProvider>(context);
     final screenSize = MediaQuery.of(context).size;
@@ -280,18 +285,11 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     return CarouselSlider.builder(
       itemCount: weekDays.length,
       options: CarouselOptions(
-        height: isSmallScreen
-            ? 70
-            : isMediumScreen
-                ? 80
-                : 100,
-        viewportFraction: isSmallScreen
-            ? 0.35
-            : isMediumScreen
-                ? 0.25
-                : 0.2,
+        height: isSmallScreen ? 50 : isMediumScreen ? 60 : 80,
+        viewportFraction: isSmallScreen ? 0.35 : isMediumScreen ? 0.25 : 0.2,
         enlargeCenterPage: true,
-        enlargeFactor: isSmallScreen ? 0.2 : 0.3,
+        enlargeFactor: 0.3,
+        enableInfiniteScroll: true,
         onPageChanged: (index, reason) {
           provider.setSelectedDate(weekDays[index]);
         },
@@ -300,42 +298,42 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
         final date = weekDays[index];
         final isSelected = provider.selectedDate.day == date.day;
         return Container(
-          margin: EdgeInsets.symmetric(horizontal: isSmallScreen ? 2 : 4),
+          margin: const EdgeInsets.symmetric(horizontal: 4.0),
           child: OutlinedButton(
             onPressed: () => provider.setSelectedDate(date),
             style: OutlinedButton.styleFrom(
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              backgroundColor:
-                  isSelected ? customLightBlue : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              backgroundColor: isSelected ? customLightBlue : Colors.transparent,
               side: BorderSide(
                 color: isSelected ? customBlue : Colors.grey.shade300,
                 width: isSelected ? 2.0 : 1.0,
               ),
-              padding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 8 : 12,
-                vertical: isSmallScreen ? 4 : 8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  DateFormat('EEE').format(date),
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 12 : 14,
-                    color: isSelected ? customBlue : Colors.grey,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    DateFormat('EEE').format(date),
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 12 : 14,
+                      color: isSelected ? customBlue : Colors.grey,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  DateFormat('d MMM').format(date),
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 14 : 16,
-                    color: isSelected ? customBlue : Colors.black,
+                  const SizedBox(height: 2),
+                  Text(
+                    DateFormat('d MMM').format(date),
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 14 : 16,
+                      color: isSelected ? customBlue : Colors.black,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -343,12 +341,53 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     );
   }
 
+  Map<DateTime, List<String>> _cachedTimeSlots = {};
+  DateTime? _lastFetchedDate;
+
+  Future<List<String>> _getTimeSlotsWithCache(DateTime selectedDate) async {
+    // Compare only the date part, not the time
+    final compareDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+    
+    // Return cached results if available for the same date
+    if (_lastFetchedDate != null &&
+        _lastFetchedDate!.isAtSameMomentAs(compareDate) &&
+        _cachedTimeSlots.containsKey(compareDate)) {
+      return _cachedTimeSlots[compareDate]!;
+    }
+
+    // Fetch new time slots
+    final timeSlots = await _generateTimeSlots(selectedDate);
+    
+    // Update cache
+    _lastFetchedDate = compareDate;
+    _cachedTimeSlots[compareDate] = timeSlots;
+    
+    return timeSlots;
+  }
+
   Widget _buildTimePicker(
       AppointmentProvider provider, bool isSmallScreen, bool isMediumScreen) {
     return FutureBuilder<List<String>>(
-      future: _generateTimeSlots(provider.selectedDate),
+      // Use the cached version instead
+      future: _getTimeSlotsWithCache(provider.selectedDate),
       builder: (context, snapshot) {
+        // Show previous data while loading if available
         if (snapshot.connectionState == ConnectionState.waiting) {
+          final cachedDate = DateTime(
+            provider.selectedDate.year,
+            provider.selectedDate.month,
+            provider.selectedDate.day,
+          );
+          
+          if (_cachedTimeSlots.containsKey(cachedDate)) {
+            return _buildTimeSlotCarousel(
+              _cachedTimeSlots[cachedDate]!,
+              provider,
+              isSmallScreen,
+              isMediumScreen,
+            );
+          }
+          
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(20.0),
@@ -370,7 +409,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
         }
 
         final timeSlots = snapshot.data ?? [];
-
+        
         if (timeSlots.isEmpty) {
           return const Center(
             child: Padding(
@@ -387,48 +426,66 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
           );
         }
 
-        // Clear selected time if it's no longer available
-        if (provider.selectedTime.isNotEmpty &&
-            !timeSlots.contains(provider.selectedTime)) {
-          provider.setSelectedTime('');
-        }
+        return _buildTimeSlotCarousel(
+          timeSlots,
+          provider,
+          isSmallScreen,
+          isMediumScreen,
+        );
+      },
+    );
+  }
 
-        return CarouselSlider.builder(
-          itemCount: timeSlots.length,
-          options: CarouselOptions(
-            height: isSmallScreen ? 50 : isMediumScreen ? 60 : 80,
-            viewportFraction: isSmallScreen ? 0.35 : isMediumScreen ? 0.25 : 0.2,
-            enlargeCenterPage: true,
-            onPageChanged: (index, reason) {
-              provider.setSelectedTime(timeSlots[index]);
-            },
-          ),
-          itemBuilder: (context, index, realIndex) {
-            bool isSelected = provider.selectedTime == timeSlots[index];
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 5.0),
-              child: OutlinedButton(
-                onPressed: () => provider.setSelectedTime(timeSlots[index]),
-                style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  backgroundColor: isSelected ? customLightBlue : Colors.transparent,
-                  side: BorderSide(
-                    color: isSelected ? customBlue : Colors.grey.shade300,
-                    width: isSelected ? 2.0 : 1.0,
-                  ),
-                ),
-                child: Text(
-                  timeSlots[index],
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 14 : 16,
-                    color: isSelected ? customBlue : Colors.black,
-                  ),
+  // Extract carousel building logic to a separate method
+  Widget _buildTimeSlotCarousel(
+    List<String> timeSlots,
+    AppointmentProvider provider,
+    bool isSmallScreen,
+    bool isMediumScreen,
+  ) {
+    return CarouselSlider.builder(
+      itemCount: timeSlots.length,
+      options: CarouselOptions(
+        height: isSmallScreen ? 50 : isMediumScreen ? 60 : 80,
+        viewportFraction: isSmallScreen ? 0.35 : isMediumScreen ? 0.25 : 0.2,
+        enlargeCenterPage: true,
+        enlargeFactor: 0.3,
+        enableInfiniteScroll: true,
+        initialPage: timeSlots.indexOf(provider.selectedTime) != -1 
+            ? timeSlots.indexOf(provider.selectedTime) 
+            : 0,
+        onPageChanged: (index, reason) {
+          provider.setSelectedTime(timeSlots[index]);
+        },
+      ),
+      itemBuilder: (context, index, realIndex) {
+        bool isSelected = provider.selectedTime == timeSlots[index];
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: OutlinedButton(
+            onPressed: () => provider.setSelectedTime(timeSlots[index]),
+            style: OutlinedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              backgroundColor: isSelected ? customLightBlue : Colors.transparent,
+              side: BorderSide(
+                color: isSelected ? customBlue : Colors.grey.shade300,
+                width: isSelected ? 2.0 : 1.0,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                timeSlots[index],
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 14 : 16,
+                  color: isSelected ? customBlue : Colors.black,
                 ),
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );
