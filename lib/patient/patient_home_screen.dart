@@ -411,11 +411,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildWaitingList(String currentAppointmentId) {
+    // Get the start and end of the current day
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('appointments')
           .where('status', isEqualTo: 'confirmed')
-          .orderBy('createdAt')
+          .where('appointmentDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('appointmentDate', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          .orderBy('appointmentDate')
+          .orderBy('appointmentTime')
           .limit(10)
           .snapshots(),
       builder: (context, snapshot) {
@@ -433,6 +441,21 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         final appointments = snapshot.data?.docs ?? [];
+        
+        if (appointments.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(
+              child: Text(
+                'No appointments scheduled for today',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          );
+        }
 
         // Find the index of current user's appointment
         final currentUserIndex =
