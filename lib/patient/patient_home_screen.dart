@@ -489,57 +489,99 @@ class _HomeScreenState extends State<HomeScreen> {
                     appointment['tokenNumber']?.toString().padLeft(2, '0') ??
                         'N/A';
 
-                return GestureDetector(
-                  onTap: () {
-                    if (isCurrentUser) {
+                return Card(
+                  color: isCurrentUser ? customLightBlue : null,
+                  elevation: isCurrentUser ? 4 : 1,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: InkWell(
+                    onTap: isCurrentUser ? () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const ConfirmationScreen(),
                         ),
                       );
-                    }
-                  },
-                  child: Card(
-                    color: isCurrentUser ? customLightBlue : null,
-                    elevation: isCurrentUser ? 4 : 1,
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: customBlue,
-                        child: Text(tokenNumber),
-                      ),
-                      title: Text(
-                        'Appointment at ${appointment['appointmentTime']}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isCurrentUser ? 'Your appointment' : '',
+                    } : null,
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: customBlue,
+                            child: Text(tokenNumber),
                           ),
-                          Text(
-                            'Date: ${_formatDate(appointment['appointmentDate'])}',
-                            style: const TextStyle(color: Colors.black54),
+                          title: Text(
+                            'Appointment at ${appointment['appointmentTime']}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                        ],
-                      ),
-                      trailing: isCurrentUser
-                          ? Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.check_circle,
-                                    color: customBlue),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
-                                  color: Colors.grey[600],
-                                ),
-                              ],
-                            )
-                          : null,
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isCurrentUser ? 'Your appointment' : '',
+                              ),
+                              Text(
+                                'Date: ${_formatDate(appointment['appointmentDate'])}',
+                                style: const TextStyle(color: Colors.black54),
+                              ),
+                            ],
+                          ),
+                          trailing: isCurrentUser
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.check_circle,
+                                        color: customBlue),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ],
+                                )
+                              : null,
+                        ),
+                        if (isCurrentUser) 
+                          Consumer<AppointmentProvider>(
+                            builder: (context, provider, child) => Padding(
+                              padding: const EdgeInsets.only(
+                                left: 16,
+                                right: 16,
+                                bottom: 12,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton.icon(
+                                    onPressed: () => _showCancelConfirmation(
+                                      context,
+                                      appointmentId,
+                                      provider,
+                                    ),
+                                    icon: const Icon(Icons.cancel_outlined, size: 20),
+                                    label: const Text('Cancel'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.red,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  TextButton.icon(
+                                    onPressed: () => _showRescheduleDialog(
+                                      context,
+                                      appointmentId,
+                                      provider,
+                                    ),
+                                    icon: const Icon(Icons.schedule, size: 20),
+                                    label: const Text('Reschedule'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: customBlue,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 );
