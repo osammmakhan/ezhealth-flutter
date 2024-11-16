@@ -46,12 +46,10 @@ class FirebaseService {
 
   // Appointment Methods
   Future<void> createAppointment(Map<String, dynamic> appointmentData) async {
-    final appointmentDate = appointmentData['appointmentDate'] as DateTime;
-    final refNumber = '${appointmentDate.month}${appointmentDate.day}${DateTime.now().millisecondsSinceEpoch % 1000}';
+    // final appointmentDate = appointmentData['appointmentDate'] as DateTime;
     
     final updatedData = {
       ...appointmentData,
-      'referenceNumber': refNumber,
       'isStarted': false,
       'startedAt': null,
       'completedAt': null,
@@ -103,12 +101,10 @@ class FirebaseService {
 
   // Add this new method for rescheduling
   Future<void> rescheduleAppointment(String appointmentId, DateTime newDate, String newTime) async {
-    final refNumber = '${newDate.month}${newDate.day}${DateTime.now().millisecondsSinceEpoch % 1000}';
     
     await _firestore.collection('appointments').doc(appointmentId).update({
       'appointmentDate': newDate,
       'appointmentTime': newTime,
-      'referenceNumber': refNumber,
       'status': 'pending',
       'updatedAt': FieldValue.serverTimestamp(),
     });

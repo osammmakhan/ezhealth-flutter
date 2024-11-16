@@ -35,22 +35,24 @@ class AppointmentProvider with ChangeNotifier {
 
   // Generate Appointment Number
   Future<String> _generateAppointmentNumber() async {
+    final today = DateTime.now();
+    final counterKey = '${today.year}${today.month.toString().padLeft(2, '0')}${today.day.toString().padLeft(2, '0')}';
     final docRef = _firestore.collection('counters').doc('appointments');
     
     try {
       String number = await _firestore.runTransaction<String>((transaction) async {
         final snapshot = await transaction.get(docRef);
         
-        int currentNumber = 0;
-        if (snapshot.exists) {
-          currentNumber = snapshot.data()?['current'] ?? 0;
-        }
+        Map<String, dynamic> data = snapshot.exists ? snapshot.data() as Map<String, dynamic> : {};
+        int currentNumber = data[counterKey] ?? 0;
         
-        int newNumber = currentNumber + 1;
-        transaction.set(docRef, {'current': newNumber}, SetOptions(merge: true));
+        int newNumber = (currentNumber % 99) + 1; // Reset to 1 after reaching 99
         
-        // Format: AP-YYYYMMDD-XXXX
-        return 'AP-${DateTime.now().year}${DateTime.now().month.toString().padLeft(2, '0')}${DateTime.now().day.toString().padLeft(2, '0')}-${newNumber.toString().padLeft(4, '0')}';
+        // Update the counter for today's date
+        transaction.set(docRef, {counterKey: newNumber}, SetOptions(merge: true));
+        
+        // Format: AP-MMDD-XX (e.g., AP-0512-01)
+        return 'AP-${today.month.toString().padLeft(2, '0')}${today.day.toString().padLeft(2, '0')}-${newNumber.toString().padLeft(2, '0')}';
       });
       
       return number;
@@ -70,14 +72,13 @@ class AppointmentProvider with ChangeNotifier {
       if (user == null) throw 'User not authenticated';
 
       final appointmentNumber = await _generateAppointmentNumber();
-      final referenceNumber = 'REF${DateTime.now().millisecondsSinceEpoch % 10000}';
+
       
       final appointmentRef = _firestore.collection('appointments').doc();
       _appointmentId = appointmentRef.id;
 
       await appointmentRef.set({
         'appointmentNumber': appointmentNumber,
-        'referenceNumber': referenceNumber,
         'userId': user.uid,
         'patientName': _bookingFor == 'Myself' ? user.displayName : _otherPersonName,
         'appointmentDate': Timestamp.fromDate(_selectedDate),
