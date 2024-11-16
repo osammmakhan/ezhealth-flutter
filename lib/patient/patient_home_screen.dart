@@ -485,9 +485,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     appointments[index].data() as Map<String, dynamic>;
                 final appointmentId = appointments[index].id;
                 final isCurrentUser = currentAppointmentId == appointmentId;
-                final tokenNumber =
-                    appointment['tokenNumber']?.toString().padLeft(2, '0') ??
-                        'N/A';
+                // final refNumber = appointment['referenceNumber'] ?? 'N/A';
 
                 return Card(
                   color: isCurrentUser ? customLightBlue : null,
@@ -507,7 +505,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ListTile(
                           leading: CircleAvatar(
                             backgroundColor: customBlue,
-                            child: Text(tokenNumber),
+                            child: Text(
+                              '${index + 1}',
+                              style: const TextStyle(color: Colors.white),
+                            ),
                           ),
                           title: Text(
                             'Appointment at ${appointment['appointmentTime']}',

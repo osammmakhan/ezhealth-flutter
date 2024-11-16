@@ -45,48 +45,12 @@ class FirebaseService {
   }
 
   // Appointment Methods
-  Future<int> _getNextTokenNumber(DateTime appointmentDate) async {
-    final dateStr = '${appointmentDate.year}-${appointmentDate.month}-${appointmentDate.day}';
-    
-    final counterRef = _firestore.collection('counters').doc(dateStr);
-    
-    try {
-      return await _firestore.runTransaction<int>((transaction) async {
-        final counterDoc = await transaction.get(counterRef);
-        
-        int nextToken = 1;
-        if (counterDoc.exists) {
-          nextToken = (counterDoc.data()?['currentToken'] ?? 0) + 1;
-        }
-        
-        // Ensure token number doesn't exceed 99
-        if (nextToken > 99) {
-          throw Exception('Maximum token limit reached for the day');
-        }
-        
-        transaction.set(counterRef, {
-          'currentToken': nextToken,
-          'date': dateStr
-        }, SetOptions(merge: true));
-        
-        return nextToken;
-      });
-    } catch (e) {
-      print('Error generating token: $e');
-      rethrow;
-    }
-  }
-
   Future<void> createAppointment(Map<String, dynamic> appointmentData) async {
     final appointmentDate = appointmentData['appointmentDate'] as DateTime;
-    final tokenNumber = await _getNextTokenNumber(appointmentDate);
-    
-    // Generate a shorter reference number (e.g., MMDDXXX format)
-    final refNumber = '${appointmentDate.month}${appointmentDate.day}${tokenNumber.toString().padLeft(3, '0')}';
+    final refNumber = '${appointmentDate.month}${appointmentDate.day}${DateTime.now().millisecondsSinceEpoch % 1000}';
     
     final updatedData = {
       ...appointmentData,
-      'tokenNumber': tokenNumber,
       'referenceNumber': refNumber,
       'isStarted': false,
       'startedAt': null,
@@ -139,13 +103,11 @@ class FirebaseService {
 
   // Add this new method for rescheduling
   Future<void> rescheduleAppointment(String appointmentId, DateTime newDate, String newTime) async {
-    final tokenNumber = await _getNextTokenNumber(newDate);
-    final refNumber = '${newDate.month}${newDate.day}${tokenNumber.toString().padLeft(3, '0')}';
+    final refNumber = '${newDate.month}${newDate.day}${DateTime.now().millisecondsSinceEpoch % 1000}';
     
     await _firestore.collection('appointments').doc(appointmentId).update({
       'appointmentDate': newDate,
       'appointmentTime': newTime,
-      'tokenNumber': tokenNumber,
       'referenceNumber': refNumber,
       'status': 'pending',
       'updatedAt': FieldValue.serverTimestamp(),

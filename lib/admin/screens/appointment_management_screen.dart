@@ -251,10 +251,6 @@ class _AppointmentManagementScreenState extends State<AppointmentManagementScree
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Token: ${appointment['tokenNumber']?.toString().padLeft(2, '0') ?? 'N/A'}',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: customBlue),
-            ),
-            Text(
               'Ref: ${appointment['referenceNumber']}',
               style: TextStyle(color: Colors.grey[600]),
             ),
