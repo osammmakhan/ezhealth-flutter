@@ -44,7 +44,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildWelcomeSection(),
-                    const SizedBox(height: 24),
                     _buildAppointmentSection(context, provider),
                   ],
                 ),
@@ -58,33 +57,169 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWelcomeSection() {
     return Container(
-      child: const Row(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isSmallScreen = constraints.maxWidth < 350;
+          final avatarSize = isSmallScreen ? 40.0 : 50.0;
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              PopupMenuButton<String>(
+                offset: const Offset(0, 40),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Container(
+                  width: avatarSize,
+                  height: avatarSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: customBlue.withOpacity(0.2),
+                      width: 2,
+                    ),
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      CircleAvatar(
+                        radius: avatarSize / 2,
+                        backgroundImage: const AssetImage(
+                            'lib/assets/images/Patient Profile.png'),
+                      ),
+                      Positioned(
+                        right: -4,
+                        bottom: -4,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: customBlue.withOpacity(0.2),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.arrow_drop_down,
+                            size: isSmallScreen ? 16 : 20,
+                            color: customBlue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                itemBuilder: (BuildContext context) => [
+                  _buildPopupMenuItem(
+                    'View Profile',
+                    Icons.person_outline,
+                    () {
+                      // Add navigation to profile screen
+                    },
+                  ),
+                  _buildPopupMenuItem(
+                    'Settings',
+                    Icons.settings_outlined,
+                    () {
+                      // Add navigation to settings screen
+                    },
+                  ),
+                  const PopupMenuDivider(),
+                  _buildPopupMenuItem(
+                    'Sign Out',
+                    Icons.logout_outlined,
+                    () async {
+                      // Add sign out logic
+                      try {
+                        await FirebaseAuth.instance.signOut();
+                        if (!context.mounted) return;
+                        // Navigate to login screen
+                        Navigator.of(context).pushReplacementNamed('/login');
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content:
+                                Text('Error signing out. Please try again.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    isDestructive: true,
+                  ),
+                ],
+              ),
+              SizedBox(width: isSmallScreen ? 8 : 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Welcome to EZ Health! 👋',
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 20 : 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Find your doctor and book appointments',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: isSmallScreen ? 14 : 16,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildPopupMenuItem(
+    String text,
+    IconData icon,
+    VoidCallback onTap, {
+    bool isDestructive = false,
+  }) {
+    return PopupMenuItem<String>(
+      onTap: onTap,
+      child: Row(
         children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundImage:
-                AssetImage('lib/assets/images/Patient Profile.png'),
+          Icon(
+            icon,
+            size: 20,
+            color: isDestructive ? Colors.red : Colors.grey[700],
           ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome to EZ Health! 👋',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Find your doctor and book appointments',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
+          const SizedBox(width: 12),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              color: isDestructive ? Colors.red : Colors.grey[800],
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -545,9 +680,21 @@ class _HomeScreenState extends State<HomeScreen> {
                             userId == FirebaseAuth.instance.currentUser?.uid;
 
                         return Card(
-                          color: isCurrentUser ? customLightBlue : null,
-                          elevation: isCurrentUser ? 4 : 1,
-                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          color: isCurrentUser
+                              ? Colors.blue.shade50
+                              : Colors.white,
+                          elevation: isCurrentUser ? 2 : 1,
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 6, horizontal: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: isCurrentUser
+                                  ? customBlue.withOpacity(0.3)
+                                  : Colors.grey.shade200,
+                              width: 1,
+                            ),
+                          ),
                           child: InkWell(
                             onTap: isCurrentUserAppointment
                                 ? () {
@@ -560,102 +707,198 @@ class _HomeScreenState extends State<HomeScreen> {
                                     );
                                   }
                                 : null,
-                            child: Column(
-                              children: [
-                                ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: customBlue,
-                                    child: Text(
-                                      '${index + 1}',
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                  title: Text(
-                                    'Appointment at ${appointment['appointmentTime']}',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                children: [
+                                  // Top Row: Queue Number and Time
+                                  Row(
                                     children: [
-                                      Text(
-                                        isCurrentUserAppointment
-                                            ? 'Your appointment'
-                                            : '',
-                                      ),
-                                      Text(
-                                        'Date: ${_formatDate(appointment['appointmentDate'])}',
-                                        style: const TextStyle(
-                                            color: Colors.black54),
-                                      ),
-                                    ],
-                                  ),
-                                  trailing: isCurrentUserAppointment
-                                      ? Row(
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: customBlue.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Icon(Icons.check_circle,
-                                                color: customBlue),
-                                            const SizedBox(width: 4),
-                                            Icon(
-                                              Icons.arrow_forward_ios,
-                                              size: 16,
-                                              color: Colors.grey[600],
+                                            CircleAvatar(
+                                              backgroundColor: customBlue,
+                                              radius: 12,
+                                              child: Text(
+                                                '${index + 1}',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              'Queue',
+                                              style: TextStyle(
+                                                color: customBlue,
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 13,
+                                              ),
                                             ),
                                           ],
-                                        )
-                                      : null,
-                                ),
-                                if (isCurrentUserAppointment)
-                                  Consumer<AppointmentProvider>(
-                                    builder: (context, provider, child) =>
-                                        Padding(
-                                      padding: const EdgeInsets.only(
-                                        left: 16,
-                                        right: 16,
-                                        bottom: 12,
+                                        ),
                                       ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          TextButton.icon(
-                                            onPressed: () =>
-                                                _showCancelConfirmation(
-                                              context,
-                                              appointmentId,
-                                              provider,
+                                      const Spacer(),
+                                      Text(
+                                        appointment['appointmentTime'],
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: isCurrentUserAppointment
+                                              ? customBlue
+                                              : Colors.grey[800],
+                                        ),
+                                      ),
+                                      if (isCurrentUserAppointment) ...[
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          Icons.arrow_forward_ios,
+                                          size: 16,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // Middle Row: Date and Status
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        _formatDate(
+                                            appointment['appointmentDate']),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      if (isCurrentUserAppointment)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: customBlue.withOpacity(0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: const Text(
+                                            'Your Appointment',
+                                            style: TextStyle(
+                                              color: customBlue,
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 12,
                                             ),
-                                            icon: const Icon(
-                                                Icons.cancel_outlined,
-                                                size: 20),
-                                            label: const Text('Cancel'),
-                                            style: TextButton.styleFrom(
-                                              foregroundColor: Colors.red,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+
+                                  if (isCurrentUserAppointment) ...[
+                                    const SizedBox(height: 12),
+                                    // Buttons Row
+                                    Consumer<AppointmentProvider>(
+                                      builder: (context, provider, child) =>
+                                          Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Expanded(
+                                            child: ElevatedButton.icon(
+                                              onPressed: () =>
+                                                  _showRescheduleDialog(
+                                                context,
+                                                appointmentId,
+                                                provider,
+                                              ),
+                                              icon: const Icon(
+                                                Icons.calendar_today_outlined,
+                                                size: 18,
+                                                color: customBlue,
+                                              ),
+                                              label: const Text(
+                                                'Reschedule',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: customBlue,
+                                                ),
+                                              ),
+                                              style: ElevatedButton.styleFrom(
+                                                foregroundColor: customBlue,
+                                                backgroundColor:
+                                                    const Color(0x8AFFFFFF),
+                                                elevation: 0,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 8),
+                                                alignment: Alignment.center,
+                                                side: const BorderSide(
+                                                  color: customBlue,
+                                                  width: 0.5,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                              ),
                                             ),
                                           ),
                                           const SizedBox(width: 8),
-                                          TextButton.icon(
-                                            onPressed: () =>
-                                                _showRescheduleDialog(
-                                              context,
-                                              appointmentId,
-                                              provider,
-                                            ),
-                                            icon: const Icon(Icons.schedule,
-                                                size: 20),
-                                            label: const Text('Reschedule'),
-                                            style: TextButton.styleFrom(
-                                              foregroundColor: customBlue,
+                                          Expanded(
+                                            child: ElevatedButton.icon(
+                                              onPressed: () =>
+                                                  _showCancelConfirmation(
+                                                context,
+                                                appointmentId,
+                                                provider,
+                                              ),
+                                              icon: const Icon(
+                                                Icons.close,
+                                                size: 18,
+                                              ),
+                                              label: const Text(
+                                                'Cancel',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              style: ElevatedButton.styleFrom(
+                                                foregroundColor: Colors.white,
+                                                backgroundColor:
+                                                    Colors.red.shade400,
+                                                elevation: 0,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 8),
+                                                alignment: Alignment.center,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                              ),
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                              ],
+                                  ],
+                                ],
+                              ),
                             ),
                           ),
                         );
