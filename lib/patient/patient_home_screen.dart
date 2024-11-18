@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:ez_health/patient/confirmation_screen.dart';
+import 'package:ez_health/auth.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -140,12 +141,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     'Sign Out',
                     Icons.logout_outlined,
                     () async {
-                      // Add sign out logic
                       try {
                         await FirebaseAuth.instance.signOut();
                         if (!context.mounted) return;
                         // Navigate to login screen
-                        Navigator.of(context).pushReplacementNamed('/login');
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (context) => const AuthScreen()),
+                        );
                       } catch (e) {
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
