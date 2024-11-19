@@ -7,7 +7,6 @@ import 'package:ez_health/admin/admin_dashboard_screen.dart';
 import 'package:ez_health/doctor/doctor_home_screen.dart';
 
 // TODO: Social Login
-// TODO: Context Based Login
 // TODO: Connect Firebase to Forgot Password Email Functionality
 
 // Sign In Screen
@@ -361,7 +360,7 @@ class _AuthWidgetState extends State<AuthWidget> {
                     widget.isLogin ? 'Login' : 'Sign Up',
                     style: const TextStyle(
                       fontSize: 18,
-                      color: customLightBlue,
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

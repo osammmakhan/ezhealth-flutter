@@ -46,15 +46,14 @@ class FirebaseService {
 
   // Appointment Methods
   Future<void> createAppointment(Map<String, dynamic> appointmentData) async {
-    // final appointmentDate = appointmentData['appointmentDate'] as DateTime;
-    
+
     final updatedData = {
       ...appointmentData,
       'isStarted': false,
       'startedAt': null,
       'completedAt': null,
     };
-    
+
     await _firestore.collection('appointments').add(updatedData);
   }
 
@@ -101,7 +100,7 @@ class FirebaseService {
 
   // Add this new method for rescheduling
   Future<void> rescheduleAppointment(String appointmentId, DateTime newDate, String newTime) async {
-    
+
     await _firestore.collection('appointments').doc(appointmentId).update({
       'appointmentDate': newDate,
       'appointmentTime': newTime,

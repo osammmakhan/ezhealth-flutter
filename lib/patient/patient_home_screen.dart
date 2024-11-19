@@ -17,6 +17,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool _isInitialized = false;
+
   @override
   void initState() {
     super.initState();
@@ -25,12 +27,29 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         Provider.of<AppointmentProvider>(context, listen: false)
             .initializeStreams();
+
+        // Set initialized after a short delay
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            setState(() {
+              _isInitialized = true;
+            });
+          }
+        });
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     final screenSize = MediaQuery.of(context).size;
     final padding = screenSize.width * 0.04;
 
@@ -207,7 +226,16 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isDestructive = false,
   }) {
     return PopupMenuItem<String>(
-      onTap: onTap,
+      onTap: () {
+        // Delay the execution to avoid BuildContext issues
+        Future.delayed(Duration.zero, () {
+          if (text == 'Sign Out') {
+            _showSignOutConfirmation(context);
+          } else {
+            onTap();
+          }
+        });
+      },
       child: Row(
         children: [
           Icon(
@@ -226,6 +254,71 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showSignOutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Sign Out',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text('Are you sure you want to sign out?'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close the dialog
+                try {
+                  await FirebaseAuth.instance.signOut();
+                  if (!context.mounted) return;
+                  
+                  // Show success snackbar
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Successfully signed out'),
+                      backgroundColor: Colors.green,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+
+                  // Navigate to login screen (keeping existing logic)
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => const AuthScreen()),
+                  );
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Error signing out. Please try again.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: const Text(
+                'Sign Out',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
