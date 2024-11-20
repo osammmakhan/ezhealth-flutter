@@ -185,7 +185,7 @@ class AppointmentProvider with ChangeNotifier {
   }
 
   void setAge(double value) {
-    _age = value;
+    _age = value.roundToDouble();
     notifyListeners();
   }
 
@@ -402,6 +402,16 @@ class AppointmentProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // Add this helper method
+  String formatAge(dynamic age) {
+    if (age == null) return 'N/A';
+    try {
+      return double.parse(age.toString()).round().toString();
+    } catch (e) {
+      return age.toString();
     }
   }
 }
