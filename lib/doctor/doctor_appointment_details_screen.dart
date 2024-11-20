@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/providers/appointment_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
 
 class DoctorAppointmentDetailsScreen extends StatelessWidget {
   final String appointmentId;
@@ -21,157 +22,186 @@ class DoctorAppointmentDetailsScreen extends StatelessWidget {
     return Consumer<AppointmentProvider>(
       builder: (context, provider, child) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Appointment Details'),
-            backgroundColor: customBlue,
-          ),
-          body: StreamBuilder<DocumentSnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('appointments')
-                .doc(appointmentId)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return const Center(child: Text('Something went wrong'));
-              }
+          body: SafeArea(
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('appointments')
+                  .doc(appointmentId)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Something went wrong'));
+                }
 
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-              if (!snapshot.hasData || !snapshot.data!.exists) {
-                return const Center(child: Text('Appointment not found'));
-              }
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  return const Center(child: Text('Appointment not found'));
+                }
 
-              final appointmentData = snapshot.data!.data() as Map<String, dynamic>;
+                final appointmentData = snapshot.data!.data() as Map<String, dynamic>;
 
-              return SingleChildScrollView(
-                padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildAppointmentInfo(appointmentData, isSmallScreen),
-                    const SizedBox(height: 24),
-                    _buildPatientInfo(appointmentData, isSmallScreen),
-                    const SizedBox(height: 24),
-                    _buildActionButtons(context, provider, appointmentData, isSmallScreen),
-                  ],
-                ),
-              );
-            },
+                return SingleChildScrollView(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: isSmallScreen ? double.infinity : 600,
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(isSmallScreen ? 20.0 : 32.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(height: isSmallScreen ? 40 : 60),
+                            _buildHeader(appointmentData, isSmallScreen),
+                            SizedBox(height: isSmallScreen ? 40 : 50),
+                            _buildAppointmentCard(appointmentData, isSmallScreen),
+                            SizedBox(height: isSmallScreen ? 40 : 50),
+                            _buildDoneButton(context),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _buildAppointmentInfo(Map<String, dynamic> data, bool isSmallScreen) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // _buildInfoRow('Reference', data['referenceNumber'] ?? 'N/A', isSmallScreen),
-            _buildInfoRow('Reference', data['appointmentNumber'] ?? 'N/A', isSmallScreen),
-            const SizedBox(height: 12),
-            _buildInfoRow('Date', _formatDate(data['appointmentDate']), isSmallScreen),
-            const SizedBox(height: 12),
-            _buildInfoRow('Time', data['appointmentTime'] ?? 'N/A', isSmallScreen),
-            const SizedBox(height: 12),
-            _buildInfoRow('Status', data['status']?.toUpperCase() ?? 'N/A', isSmallScreen),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPatientInfo(Map<String, dynamic> data, bool isSmallScreen) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInfoRow('Patient Name', data['patientName'] ?? 'N/A', isSmallScreen),
-            const SizedBox(height: 12),
-            _buildInfoRow('Age', '${data['age']?.toString() ?? 'N/A'} years', isSmallScreen),
-            const SizedBox(height: 12),
-            _buildInfoRow('Gender', data['gender'] ?? 'N/A', isSmallScreen),
-            const SizedBox(height: 12),
-            const Text(
-              'Problem Description',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(data['problemDescription'] ?? 'No description provided'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionButtons(BuildContext context, AppointmentProvider provider,
-      Map<String, dynamic> data, bool isSmallScreen) {
-    final status = data['status'] ?? '';
-    if (status == 'completed' || status == 'cancelled') return const SizedBox();
-
-    return Row(
+  Widget _buildHeader(Map<String, dynamic> data, bool isSmallScreen) {
+    return Column(
       children: [
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () async {
-              try {
-                await provider.markAppointmentAsCompleted(appointmentId);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Appointment marked as completed')),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: customBlue,
-              padding: EdgeInsets.symmetric(
-                vertical: isSmallScreen ? 12 : 16,
-              ),
+        Text(
+          data['patientName'] ?? 'Patient Name',
+          style: TextStyle(
+            fontSize: isSmallScreen ? 24 : 28,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 16 : 24,
+            vertical: isSmallScreen ? 8 : 12,
+          ),
+          decoration: BoxDecoration(
+            color: customLightBlue,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            'Appointment Details',
+            style: TextStyle(
+              fontSize: isSmallScreen ? 16 : 18,
+              fontWeight: FontWeight.bold,
+              color: customBlue,
             ),
-            child: const Text('Mark as Completed'),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildInfoRow(String label, String value, bool isSmallScreen) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Text(
-            '$label: ',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: isSmallScreen ? 14 : 16,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: isSmallScreen ? 14 : 16,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
-        ],
+  Widget _buildAppointmentCard(Map<String, dynamic> data, bool isSmallScreen) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
       ),
+      child: Padding(
+        padding: EdgeInsets.all(isSmallScreen ? 20 : 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDetailRow('Reference', data['appointmentNumber'] ?? 'N/A', isSmallScreen),
+            SizedBox(height: isSmallScreen ? 15 : 20),
+            _buildDetailRow('Date', _formatDate(data['appointmentDate']), isSmallScreen),
+            SizedBox(height: isSmallScreen ? 15 : 20),
+            _buildDetailRow('Time', data['appointmentTime'] ?? 'N/A', isSmallScreen),
+            SizedBox(height: isSmallScreen ? 15 : 20),
+            _buildDetailRow('Age', '${data['age']?.toString() ?? 'N/A'} years', isSmallScreen),
+            SizedBox(height: isSmallScreen ? 15 : 20),
+            _buildDetailRow('Gender', data['gender'] ?? 'N/A', isSmallScreen),
+            SizedBox(height: isSmallScreen ? 15 : 20),
+            _buildDetailRow('Status', data['status']?.toUpperCase() ?? 'N/A', isSmallScreen, 
+              isHighlighted: true),
+            if (data['problemDescription'] != null && data['problemDescription'].toString().isNotEmpty) ...[
+              const Divider(height: 40),
+              Text(
+                'Problem Description',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: isSmallScreen ? 16 : 18,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                data['problemDescription'],
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 16 : 18,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, bool isSmallScreen, 
+      {bool isHighlighted = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: isSmallScreen ? 16 : 18,
+          ),
+        ),
+        isHighlighted 
+            ? Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: customLightBlue,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: isSmallScreen ? 16 : 18,
+                    color: customBlue,
+                  ),
+                ),
+              )
+            : Text(
+                value,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: isSmallScreen ? 16 : 18,
+                ),
+              ),
+      ],
+    );
+  }
+
+  Widget _buildDoneButton(BuildContext context) {
+    return HorizontalBtn(
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
+      text: 'Done',
     );
   }
 
