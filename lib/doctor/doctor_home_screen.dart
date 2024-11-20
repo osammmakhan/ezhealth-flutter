@@ -15,6 +15,7 @@ class DoctorHomeScreen extends StatefulWidget {
 
 class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   int _selectedIndex = 0;
+  String _selectedTab = 'Upcoming';
   final user = FirebaseAuth.instance.currentUser;
 
   @override
@@ -279,7 +280,8 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       stream: FirebaseFirestore.instance
           .collection('appointments')
           .where('status', isEqualTo: 'in_progress')
-          .limit(1)
+          .limit(3)
+          .orderBy('startedAt', descending: false)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -318,21 +320,44 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   }
 
   Widget _buildUpcomingAppointments(bool isSmallScreen) {
+    // Get start and end of current date
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Upcoming Appointments',
-          style: TextStyle(
-            fontSize: isSmallScreen ? 20 : 24,
-            fontWeight: FontWeight.bold,
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.grey[300]!,
+                width: 1,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildTabButton('Upcoming', isSmallScreen),
+              ),
+              Expanded(
+                child: _buildTabButton('Completed', isSmallScreen),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 16),
+
         StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('appointments')
-              .where('status', isEqualTo: 'confirmed')
+              .where('status', isEqualTo: _selectedTab == 'Upcoming' ? 'confirmed' : 'completed')
+              .where('appointmentDate',
+                  isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+                  isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
               .orderBy('appointmentDate')
               .orderBy('appointmentTime')
               .snapshots(),
@@ -344,10 +369,10 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
               return Center(
                 child: Text(
-                  'No upcoming appointments',
+                  'No ${_selectedTab.toLowerCase()} appointments for today',
                   style: TextStyle(
                     color: Colors.grey[600],
-                    fontSize: isSmallScreen ? 16 : 18,
+                    fontSize: isSmallScreen ? 14 : 16,
                   ),
                 ),
               );
@@ -366,6 +391,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                   index,
                   isSmallScreen,
                   isCurrentAppointment: false,
+                  isCompleted: _selectedTab == 'Completed',
                 );
               },
             );
@@ -375,13 +401,175 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     );
   }
 
+  Widget _buildTabButton(String title, bool isSmallScreen) {
+    final isSelected = _selectedTab == title;
+    
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedTab = title;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isSelected ? customBlue : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          title,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: isSelected ? customBlue : Colors.grey,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: isSmallScreen ? 16 : 18,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAppointmentCard(
     Map<String, dynamic> data,
     String appointmentId,
     int index,
     bool isSmallScreen, {
     bool isCurrentAppointment = false,
+    bool isCompleted = false,
   }) {
+    if (isCompleted) {
+      return Card(
+        elevation: isCurrentAppointment ? 2 : 1,
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: isCurrentAppointment 
+                ? customBlue.withOpacity(0.3)
+                : Colors.grey.shade200,
+            width: 1,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DoctorAppointmentDetailsScreen(
+                    appointmentId: appointmentId,
+                  ),
+                ),
+              );
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: customLightBlue,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: customBlue,
+                                radius: 12,
+                                child: Text(
+                                  '${index + 1}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Queue',
+                                style: TextStyle(
+                                  color: customBlue,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundImage: const AssetImage('lib/assets/images/Patient Profile.png'),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              data['patientName'] ?? 'Patient Name',
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 16 : 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              data['appointmentTime'] ?? 'N/A',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.chevron_right,
+                              color: Colors.grey[400],
+                              size: 24,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatDate(data['appointmentDate']),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    
     return Card(
       elevation: isCurrentAppointment ? 2 : 1,
       margin: const EdgeInsets.symmetric(vertical: 6),
