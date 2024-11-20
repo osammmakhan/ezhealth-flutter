@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/providers/appointment_provider.dart';
+import 'package:intl/intl.dart';
 
 class DoctorAppointmentDetailsScreen extends StatelessWidget {
   final String appointmentId;
@@ -149,35 +150,39 @@ class DoctorAppointmentDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildInfoRow(String label, String value, bool isSmallScreen) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: isSmallScreen ? 14 : 16,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: isSmallScreen ? 14 : 16,
+            ),
           ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: isSmallScreen ? 14 : 16,
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: isSmallScreen ? 14 : 16,
+                color: Colors.grey[600],
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   String _formatDate(dynamic date) {
-    if (date is String) {
+    if (date is Timestamp) {
+      return DateFormat('MMM dd, yyyy').format(date.toDate());
+    } else if (date is String) {
       return date;
-    } else if (date is num) {
-      return DateTime.fromMillisecondsSinceEpoch(date.toInt()).toString();
     } else if (date is DateTime) {
-      return date.toString();
-    } else {
-      throw Exception('Invalid date format');
+      return DateFormat('MMM dd, yyyy').format(date);
     }
+    return 'Date not available';
   }
 } 
