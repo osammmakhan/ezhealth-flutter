@@ -78,7 +78,6 @@ flutter:
     - lib/assets/images/onboarding-assets/Medical Team.svg
     - lib/assets/images/sociallogin-assets/
     - lib/assets/images/paymentmethod-assets/
-  # - lib/screens/login_screens/assets/images/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

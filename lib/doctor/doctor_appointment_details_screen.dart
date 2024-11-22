@@ -154,7 +154,7 @@ class DoctorAppointmentDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, bool isSmallScreen, 
+  Widget _buildDetailRow(String label, String value, bool isSmallScreen,
       {bool isHighlighted = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -166,7 +166,7 @@ class DoctorAppointmentDetailsScreen extends StatelessWidget {
             fontSize: isSmallScreen ? 16 : 18,
           ),
         ),
-        isHighlighted 
+        isHighlighted
             ? Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,

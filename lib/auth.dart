@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/patient/patient_home_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ez_health/admin/admin_dashboard_screen.dart';
+import 'package:ez_health/admin/admin_home_screen.dart';
 import 'package:ez_health/doctor/doctor_home_screen.dart';
 
 // TODO: Social Login
