@@ -323,40 +323,78 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDoctorCard(BuildContext context, bool hasAppointment) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildDoctorInfo(),
-                const SizedBox(height: 12),
-                const Text(
-                  'Bio',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper.',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (!hasAppointment) _buildAppointmentButton(context),
-              ],
+          _buildDoctorInfo(),
+          const SizedBox(height: 12),
+          const Text(
+            'Bio',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
+          const SizedBox(height: 4),
+          const Text(
+            'Experienced dentist specializing in preventive care and cosmetic dentistry.',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (!hasAppointment)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PatientAppointmentScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: customBlue,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.calendar_today_outlined, color: Colors.white, size: 24),
+                    SizedBox(width: 12),
+                    Text(
+                      'Make Appointment',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -1225,31 +1263,68 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     return Consumer<AppointmentProvider>(
       builder: (context, provider, child) {
-        return ElevatedButton.icon(
+        Color backgroundColor;
+        Color textColor;
+        
+        switch (label) {
+          case 'Cancel':
+            backgroundColor = const Color(0xFFEF5350); // Red
+            textColor = Colors.white;
+            break;
+          case 'Reschedule':
+            backgroundColor = Colors.orange;
+            textColor = Colors.white;
+            break;
+          default:
+            backgroundColor = customBlue;
+            textColor = Colors.white;
+        }
+
+        return ElevatedButton(
           onPressed: provider.isLoading ? null : onPressed,
-          icon: provider.isLoading
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: backgroundColor,
+            foregroundColor: textColor,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            disabledBackgroundColor: backgroundColor.withOpacity(0.5),
+            disabledForegroundColor: textColor.withOpacity(0.5),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (provider.isLoading)
+                const SizedBox(
+                  height: 20,
+                  width: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : Icon(icon, size: 18),
-          label: Text(label),
-          style: ElevatedButton.styleFrom(
-            backgroundColor:
-                label == 'Cancel' ? Colors.red[100] : customLightBlue,
-            foregroundColor: label == 'Cancel' ? Colors.red : customBlue,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            disabledBackgroundColor:
-                (label == 'Cancel' ? Colors.red[100] : customLightBlue)
-                    ?.withOpacity(0.5),
-            disabledForegroundColor:
-                (label == 'Cancel' ? Colors.red : customBlue).withOpacity(0.5),
+              else
+                Icon(
+                  label == 'Cancel' 
+                    ? Icons.cancel_outlined 
+                    : label == 'Reschedule' 
+                      ? Icons.schedule 
+                      : icon,
+                  size: 20,
+                  color: textColor,
+                ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         );
       },

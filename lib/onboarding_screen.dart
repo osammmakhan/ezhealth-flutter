@@ -4,8 +4,6 @@ import 'package:ez_health/auth.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '/assets/constants/constants.dart';
 
-// TODO: Add a splash screen that shows the app logo before the onboarding screen
-// TODO: Fix the back arrow alignment
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -39,7 +37,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     displayText2: 'Experienced\nDoctors',
                     textColor2: customBlue,
                     descriptionText:
-                        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper'),
+                        'Find and connect with qualified healthcare professionals, dedicated to providing you with the best medical care.'),
                 OnBoardingPage(
                     svgImage:
                         'lib/assets/images/onboarding-assets/Medical Team.svg',
@@ -49,7 +47,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     displayText2: 'Your\nDoctors',
                     textColor2: Colors.black,
                     descriptionText:
-                        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper'),
+                        'Make informed decisions about your healthcare and access detailed profiles of our medical staff.'),
                 OnBoardingPage(
                   svgImage:
                       'lib/assets/images/onboarding-assets/Calendar Guy.svg',
@@ -59,7 +57,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   displayText2: 'Appointment\nBooking',
                   textColor2: customBlue,
                   descriptionText:
-                      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a purus ullamcorper',
+                      'Book and manage your medical appointments with ease. Get real-time updates to stay on top of your schedule.',
                 ),
               ],
             ),
