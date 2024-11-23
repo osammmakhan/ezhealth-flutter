@@ -6,9 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ez_health/admin/admin_home_screen.dart';
 import 'package:ez_health/doctor/doctor_home_screen.dart';
 
-// TODO: Social Login
-// TODO: Connect Firebase to Forgot Password Email Functionality
-
 // Sign In Screen
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -26,7 +23,8 @@ class _AuthScreenState extends State<AuthScreen> {
     });
   }
 
-  Future<UserCredential> _handleAuth(String email, String password, {String? name}) async {
+  Future<UserCredential> _handleAuth(String email, String password,
+      {String? name}) async {
     try {
       UserCredential userCredential;
       if (isLogin) {
@@ -36,7 +34,8 @@ class _AuthScreenState extends State<AuthScreen> {
         );
       } else {
         // Create user with email and password
-        userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        userCredential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: email,
           password: password,
         );
@@ -102,38 +101,14 @@ class _AuthScreenState extends State<AuthScreen> {
                   isLogin: isLogin,
                   onSubmit: _handleAuth,
                 ),
-                const SizedBox(height: 40), // Adjusted spacing
-                // Social Login Section
-                Column(
-                  children: [
-                    const Text(
-                      'or connect with',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _socialLoginButton(
-                            'lib/assets/images/sociallogin-assets/facebook_logo.png'),
-                        _socialLoginButton(
-                            'lib/assets/images/sociallogin-assets/google_logo.png'),
-                        _socialLoginButton(
-                            'lib/assets/images/sociallogin-assets/twitterx_logo.png'),
-                        _socialLoginButton(
-                            'lib/assets/images/sociallogin-assets/microsoft_logo.png'),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 10), // Reduced from 40 to 20
                 // Toggle Auth Mode Section
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       isLogin
-                          ? "Don't have an account? "
+                          ? "Don't have an account?"
                           : "Already have an account? ",
                       style: const TextStyle(color: Colors.grey),
                     ),
@@ -152,25 +127,6 @@ class _AuthScreenState extends State<AuthScreen> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _socialLoginButton(String assetName) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: InkWell(
-        onTap: () {
-          // Implement social login
-        },
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Image.asset(assetName, width: 32, height: 32),
         ),
       ),
     );
@@ -394,7 +350,8 @@ class _AuthWidgetState extends State<AuthWidget> {
         if (!widget.isLogin) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Account created successfully! Welcome to EZ Health'),
+              content:
+                  Text('Account created successfully! Welcome to EZ Health'),
               backgroundColor: Colors.green,
               duration: Duration(seconds: 3),
             ),
@@ -408,7 +365,8 @@ class _AuthWidgetState extends State<AuthWidget> {
         switch (role) {
           case 'admin':
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+              MaterialPageRoute(
+                  builder: (context) => const AdminDashboardScreen()),
             );
             break;
           case 'doctor':

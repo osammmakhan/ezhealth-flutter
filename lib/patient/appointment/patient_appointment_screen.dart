@@ -96,11 +96,16 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(
           widget.isRescheduling ? 'Reschedule Appointment' : 'Book Appointment',
-          style: const TextStyle(color: Colors.black),
+          style: const TextStyle(color: Colors.white),
         ),
-        // ... rest of AppBar code ...
+        backgroundColor: customBlue,
+        elevation: 0,
       ),
       body: SafeArea(
         child: Column(
@@ -121,10 +126,10 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
                       _buildDoctorInfo(isSmallScreen, isMediumScreen),
                       SizedBox(
                           height: isSmallScreen
-                              ? 40
+                              ? 20
                               : isMediumScreen
-                                  ? 60
-                                  : 80),
+                                  ? 30
+                                  : 40),
                       const Divider(
                           color: Colors.grey, indent: 20, endIndent: 20),
                       const SizedBox(height: 24),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:intl/intl.dart';
+// import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ez_health/auth.dart';
 import 'package:ez_health/doctor/doctor_appointment_details_screen.dart';
@@ -14,7 +15,6 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  int _selectedIndex = 0;
   String _selectedTab = 'Confirmed';
   final user = FirebaseAuth.instance.currentUser;
 
@@ -42,7 +42,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
@@ -390,20 +389,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DoctorAppointmentDetailsScreen(
-                    appointmentId: appointmentId,
-                  ),
-                ),
-              );
-            },
-            child: Row(
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DoctorAppointmentDetailsScreen(
+                appointmentId: appointmentId,
+              ),
+            ),
+          );
+        },
+        child: Column(
+          children: [
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -502,182 +501,182 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 16),
-          // Action Buttons (keeping existing logic, just updating styling)
-          if (data['status'] == 'pending') ...[
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _showConfirmDialog(appointmentId),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: customBlue,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Confirm',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
+            const SizedBox(height: 16),
+            // Action Buttons (keeping existing logic, just updating styling)
+            if (data['status'] == 'pending') ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _showConfirmDialog(appointmentId),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: customBlue,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _showCancelDialog(appointmentId),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEF5350),
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.cancel_outlined, color: Colors.white, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Cancel',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Confirm',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => _showRescheduleDialog(appointmentId),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  elevation: 0,
-                  padding: EdgeInsets.symmetric(
-                    vertical: isSmallScreen ? 12 : 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.schedule,
-                      color: Colors.white,
-                      size: isSmallScreen ? 20 : 24,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _showCancelDialog(appointmentId),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEF5350),
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.cancel_outlined, color: Colors.white, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Reschedule Appointment',
-                      style: TextStyle(
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _showRescheduleDialog(appointmentId),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    elevation: 0,
+                    padding: EdgeInsets.symmetric(
+                      vertical: isSmallScreen ? 12 : 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.schedule,
                         color: Colors.white,
-                        fontSize: isSmallScreen ? 16 : 18,
-                        fontWeight: FontWeight.bold,
+                        size: isSmallScreen ? 20 : 24,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Text(
+                        'Reschedule Appointment',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isSmallScreen ? 16 : 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-          // ... rest of the status conditions remain the same
-          if (data['status'] == 'confirmed') ...[
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _showCancelDialog(appointmentId),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEF5350),
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.cancel_outlined, color: Colors.white, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Cancel',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
+            ],
+            // ... rest of the status conditions remain the same
+            if (data['status'] == 'confirmed') ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _showCancelDialog(appointmentId),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEF5350),
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
                         ),
-                      ],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.cancel_outlined, color: Colors.white, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _showRescheduleDialog(appointmentId),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.schedule, color: Colors.white, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Reschedule',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _showRescheduleDialog(appointmentId),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
                         ),
-                      ],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.schedule, color: Colors.white, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Reschedule',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -705,31 +704,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             color: Colors.grey[600],
             fontSize: 13,
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBottomNavBar() {
-    return BottomNavigationBar(
-      currentIndex: _selectedIndex,
-      onTap: (index) {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.people),
-          label: 'Patients',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings),
-          label: 'Settings',
         ),
       ],
     );

@@ -14,7 +14,6 @@ class DoctorHomeScreen extends StatefulWidget {
 }
 
 class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
-  int _selectedIndex = 0;
   String _selectedTab = 'Upcoming';
   final user = FirebaseAuth.instance.currentUser;
 
@@ -42,7 +41,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
@@ -810,30 +808,5 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       return DateFormat('MMM dd, yyyy').format(date.toDate());
     }
     return 'Date not available';
-  }
-
-  Widget _buildBottomNavBar() {
-    return BottomNavigationBar(
-      currentIndex: _selectedIndex,
-      onTap: (index) {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.notifications),
-          label: 'Notifications',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
-        ),
-      ],
-    );
   }
 }
