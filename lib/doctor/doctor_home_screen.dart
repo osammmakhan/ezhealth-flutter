@@ -514,7 +514,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                           children: [
                             CircleAvatar(
                               radius: 24,
-                              backgroundImage: const AssetImage('lib/assets/images/Patient Profile.png'),
+                              backgroundImage: const AssetImage('lib/assets/images/Patient Profile Picture.png'),
                             ),
                             const SizedBox(width: 12),
                             Text(
@@ -644,7 +644,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                             children: [
                               CircleAvatar(
                                 radius: 24,
-                                backgroundImage: const AssetImage('lib/assets/images/Patient Profile.png'),
+                                backgroundImage: const AssetImage('lib/assets/images/Patient Profile Picture.png'),
                               ),
                               const SizedBox(width: 12),
                               Text(
