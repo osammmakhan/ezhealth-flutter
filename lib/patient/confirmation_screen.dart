@@ -309,14 +309,6 @@ class ConfirmationScreen extends StatelessWidget {
   Widget _buildDoneButton(BuildContext context) {
     return HorizontalBtn(
       onPressed: () {
-        // TODO: I think this part is redundant now so might remove it later.
-        // Get the provider but DON'T generate a new appointment ID
-        final provider =
-            Provider.of<AppointmentProvider>(context, listen: false);
-
-        // Add a print statement to verify the state
-        print('Appointment ID: ${provider.appointmentId}');
-
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (context) => const HomeScreen(),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:intl/intl.dart';
-import 'package:carousel_slider/carousel_slider.dart';
+// import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ez_health/auth.dart';
 
@@ -15,7 +15,7 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _selectedIndex = 0;
-  String _selectedTab = 'Upcoming';
+  String _selectedTab = 'Confirmed';
   final user = FirebaseAuth.instance.currentUser;
 
   @override
@@ -248,6 +248,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildAppointmentsList(bool isSmallScreen) {
+    // Get start and end of current date
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -286,7 +291,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           stream: FirebaseFirestore.instance
               .collection('appointments')
               .where('status', isEqualTo: _selectedTab.toLowerCase())
-              .orderBy('createdAt', descending: true)
+              .where('appointmentDate', 
+                  isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+                  isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+              .orderBy('appointmentTime')
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
@@ -304,7 +312,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Text(
-                    'No ${_selectedTab.toLowerCase()} appointments',
+                    'No ${_selectedTab.toLowerCase()} appointments for today',
                     style: TextStyle(
                       fontSize: isSmallScreen ? 16 : 18,
                       color: Colors.grey[600],
@@ -320,7 +328,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               itemCount: appointments.length,
               itemBuilder: (context, index) {
                 final appointment = appointments[index].data() as Map<String, dynamic>;
-                return _buildAppointmentCard(appointment, appointments[index].id, isSmallScreen);
+                final queueNumber = _selectedTab.toLowerCase() == 'confirmed' ? index + 1 : 0;
+                return _buildAppointmentCard(
+                  {...appointment, 'queueNumber': queueNumber},
+                  appointments[index].id,
+                  isSmallScreen,
+                );
               },
             );
           },
@@ -582,7 +595,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               ),
             ),
-          ] else if (data['status'] == 'confirmed') ...[
+          ],
+          // ... rest of the status conditions remain the same
+          if (data['status'] == 'confirmed') ...[
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -591,8 +607,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEF5350),
                       elevation: 0,
-                      padding: EdgeInsets.symmetric(
-                        vertical: isSmallScreen ? 12 : 16,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -601,12 +617,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
-                        Icon(Icons.cancel_outlined, color: Colors.white),
+                        Icon(Icons.cancel_outlined, color: Colors.white, size: 20),
                         SizedBox(width: 8),
                         Text(
                           'Cancel',
                           style: TextStyle(
                             color: Colors.white,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -620,8 +637,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     onPressed: () => _showRescheduleDialog(appointmentId),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
-                      padding: EdgeInsets.symmetric(
-                        vertical: isSmallScreen ? 12 : 16,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -629,18 +647,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.schedule,
-                          color: Colors.white,
-                          size: isSmallScreen ? 20 : 24,
-                        ),
-                        const SizedBox(width: 8),
+                      children: const [
+                        Icon(Icons.schedule, color: Colors.white, size: 20),
+                        SizedBox(width: 8),
                         Text(
                           'Reschedule',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: isSmallScreen ? 14 : 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -656,256 +670,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildActionButton(
-    String label,
-    IconData icon,
-    Color color,
-    VoidCallback onPressed,
-    bool isSmallScreen,
-  ) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        padding: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? 16 : 24,
-          vertical: isSmallScreen ? 12 : 16,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: isSmallScreen ? 16 : 20),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: isSmallScreen ? 12 : 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _updateAppointmentStatus(String appointmentId, String status) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('appointments')
-          .doc(appointmentId)
-          .update({
-        'status': status,
-        'updatedAt': FieldValue.serverTimestamp(),
-        if (status == 'cancelled') 'cancelledBy': 'admin',
-      });
-    } catch (e) {
-      print('Error updating appointment status: $e');
+  String _formatDate(dynamic date) {
+    if (date is Timestamp) {
+      return DateFormat('MMM dd, yyyy').format(date.toDate());
     }
+    return 'Date not available';
   }
 
-  Future<void> _showCancelDialog(String appointmentId) async {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text(
-            'Cancel Appointment',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: const Text('Are you sure you want to cancel this appointment?'),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'No',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await _updateAppointmentStatus(appointmentId, 'cancelled');
-              },
-              child: const Text(
-                'Yes',
-                style: TextStyle(
-                  color: Color(0xFFEF5350),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _showRescheduleDialog(String appointmentId) async {
-    DateTime selectedDate = DateTime.now();
-    String selectedTime = '';
-    
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Reschedule Appointment'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Date Picker
-                CarouselSlider.builder(
-                  itemCount: 7,
-                  options: CarouselOptions(
-                    height: 70,
-                    viewportFraction: 0.35,
-                    enlargeCenterPage: true,
-                    enlargeFactor: 0.2,
-                    onPageChanged: (index, reason) {
-                      setState(() {
-                        selectedDate = DateTime.now().add(Duration(days: index));
-                      });
-                    },
-                  ),
-                  itemBuilder: (context, index, realIndex) {
-                    final date = DateTime.now().add(Duration(days: index));
-                    final isSelected = selectedDate.day == date.day;
-                    
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      child: OutlinedButton(
-                        onPressed: () => setState(() => selectedDate = date),
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          backgroundColor: isSelected ? customLightBlue : Colors.transparent,
-                          side: BorderSide(
-                            color: isSelected ? customBlue : Colors.grey.shade300,
-                            width: isSelected ? 2.0 : 1.0,
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              DateFormat('EEE').format(date),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isSelected ? customBlue : Colors.grey,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              DateFormat('d MMM').format(date),
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: isSelected ? customBlue : Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Time Picker
-                CarouselSlider.builder(
-                  itemCount: 11,
-                  options: CarouselOptions(
-                    height: 50,
-                    viewportFraction: 0.35,
-                    enlargeCenterPage: true,
-                    onPageChanged: (index, reason) {
-                      setState(() {
-                        final time = TimeOfDay(
-                          hour: 17 + (index ~/ 2),
-                          minute: (index % 2) * 30,
-                        );
-                        selectedTime = time.format(context);
-                      });
-                    },
-                  ),
-                  itemBuilder: (context, index, realIndex) {
-                    final time = TimeOfDay(
-                      hour: 17 + (index ~/ 2),
-                      minute: (index % 2) * 30,
-                    );
-                    final timeString = time.format(context);
-                    final isSelected = selectedTime == timeString;
-
-                    return OutlinedButton(
-                      onPressed: () => setState(() => selectedTime = timeString),
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        backgroundColor: isSelected ? customLightBlue : Colors.transparent,
-                        side: BorderSide(
-                          color: isSelected ? customBlue : Colors.grey.shade300,
-                          width: isSelected ? 2.0 : 1.0,
-                        ),
-                      ),
-                      child: Text(
-                        timeString,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isSelected ? customBlue : Colors.black,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: selectedTime.isEmpty ? null : () async {
-                await FirebaseFirestore.instance
-                    .collection('appointments')
-                    .doc(appointmentId)
-                    .update({
-                  'appointmentDate': Timestamp.fromDate(selectedDate),
-                  'appointmentTime': selectedTime,
-                  'updatedAt': FieldValue.serverTimestamp(),
-                });
-                Navigator.pop(context);
-              },
-              child: const Text('Confirm'),
-            ),
-          ],
+  Widget _buildInfoChip(IconData icon, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: Colors.grey[600],
         ),
-      ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 13,
+          ),
+        ),
+      ],
     );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'confirmed':
-        return Colors.green;
-      case 'cancelled':
-        return Colors.red;
-      case 'completed':
-        return Colors.blue;
-      default:
-        return Colors.orange;
-    }
   }
 
   Widget _buildBottomNavBar() {
@@ -1027,9 +817,198 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  String _formatDate(Timestamp timestamp) {
-    final date = timestamp.toDate();
-    return DateFormat('MMM dd, yyyy').format(date);
+  void _showRescheduleDialog(String appointmentId) {
+    DateTime selectedDate = DateTime.now();
+    TimeOfDay selectedTime = TimeOfDay.now();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Reschedule Appointment',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Select new date and time for the appointment:'),
+              const SizedBox(height: 16),
+              // Date Picker Button
+              ElevatedButton(
+                onPressed: () async {
+                  final DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate,
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      selectedDate = picked;
+                    });
+                  }
+                },
+                child: Text(
+                  'Select Date: ${DateFormat('MMM dd, yyyy').format(selectedDate)}',
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Time Picker Button
+              ElevatedButton(
+                onPressed: () async {
+                  final TimeOfDay? picked = await showTimePicker(
+                    context: context,
+                    initialTime: selectedTime,
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      selectedTime = picked;
+                    });
+                  }
+                },
+                child: Text(
+                  'Select Time: ${selectedTime.format(context)}',
+                ),
+              ),
+            ],
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                try {
+                  // Combine date and time
+                  final newDateTime = DateTime(
+                    selectedDate.year,
+                    selectedDate.month,
+                    selectedDate.day,
+                    selectedTime.hour,
+                    selectedTime.minute,
+                  );
+
+                  await FirebaseFirestore.instance
+                      .collection('appointments')
+                      .doc(appointmentId)
+                      .update({
+                    'appointmentDate': Timestamp.fromDate(newDateTime),
+                    'appointmentTime': selectedTime.format(context),
+                    'updatedAt': FieldValue.serverTimestamp(),
+                  });
+
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Appointment rescheduled successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error rescheduling appointment: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: Text(
+                'Reschedule',
+                style: TextStyle(
+                  color: Colors.orange[700],
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _updateAppointmentStatus(String appointmentId, String status) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('appointments')
+          .doc(appointmentId)
+          .update({
+        'status': status,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Appointment ${status.replaceAll('_', ' ')} successfully'),
+            backgroundColor: customBlue,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating appointment: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showCancelDialog(String appointmentId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Cancel Appointment',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text('Are you sure you want to cancel this appointment?'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'No',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _updateAppointmentStatus(appointmentId, 'cancelled');
+              },
+              child: const Text(
+                'Yes',
+                style: TextStyle(
+                  color: Color(0xFFEF5350),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showConfirmDialog(String appointmentId) {
