@@ -131,6 +131,18 @@ class AppointmentProvider with ChangeNotifier {
         });
       }
 
+      // If it's an emergency appointment, create notification for doctor
+      if (isAdmin && _isEmergency) {
+        await createDoctorNotification(
+          type: 'emergency_appointment',
+          appointmentId: _appointmentId,
+          appointmentData: {
+            'patientName': patientName,
+            'appointmentTime': _selectedTime,
+          },
+        );
+      }
+
     } catch (e) {
       print('Error creating appointment: $e');
       rethrow;
@@ -156,7 +168,9 @@ class AppointmentProvider with ChangeNotifier {
         throw 'Appointment not found';
       }
 
-      // Update only the status and updatedAt fields
+      final appointmentData = appointmentDoc.data() as Map<String, dynamic>;
+
+      // Update appointment status
       await _firestore
           .collection('appointments')
           .doc(appointmentId)
@@ -165,8 +179,15 @@ class AppointmentProvider with ChangeNotifier {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // Create notification for patient
-      final patientId = appointmentDoc.data()?['userId'];
+      // Create notification for doctor
+      await createDoctorNotification(
+        type: 'new_appointment_confirmed',
+        appointmentId: appointmentId,
+        appointmentData: appointmentData,
+      );
+
+      // Create notification for patient (existing logic)
+      final patientId = appointmentData['userId'];
       if (patientId != null) {
         await _firestore.collection('notifications').add({
           'userId': patientId,
@@ -443,5 +464,42 @@ class AppointmentProvider with ChangeNotifier {
   void setEmergency(bool value) {
     _isEmergency = value;
     notifyListeners();
+  }
+
+  // Add this method to your AppointmentProvider class
+  Future<void> createDoctorNotification({
+    required String type,
+    required String appointmentId,
+    required Map<String, dynamic> appointmentData,
+  }) async {
+    try {
+      String message;
+      bool isPriority = false;
+
+      switch (type) {
+        case 'new_appointment_confirmed':
+          message = 'New appointment confirmed for ${appointmentData['appointmentTime']} with ${appointmentData['patientName']}';
+          break;
+        case 'emergency_appointment':
+          message = 'Emergency appointment added: ${appointmentData['patientName']}';
+          isPriority = true;
+          break;
+        default:
+          return;
+      }
+
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'userId': 'doctor', // Since we're using a single doctor system
+        'type': type,
+        'appointmentId': appointmentId,
+        'message': message,
+        'read': false,
+        'createdAt': FieldValue.serverTimestamp(),
+        if (isPriority) 'priority': 'high',
+      });
+    } catch (e) {
+      print('Error creating doctor notification: $e');
+      rethrow;
+    }
   }
 }

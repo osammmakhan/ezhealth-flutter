@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ez_health/doctor/doctor_appointment_details_screen.dart';
 import 'package:ez_health/auth.dart';
 import 'package:intl/intl.dart';
+import 'package:ez_health/patient/notification_screen.dart';
 
 class DoctorHomeScreen extends StatefulWidget {
   const DoctorHomeScreen({super.key});
@@ -20,22 +21,20 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width < 600;
     final padding = screenSize.width * 0.04;
 
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: padding),
+            padding: EdgeInsets.all(padding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _buildWelcomeSection(),
+                _buildCurrentAppointment(screenSize),
                 const SizedBox(height: 16),
-                _buildHeader(isSmallScreen),
-                _buildCurrentAppointment(isSmallScreen),
-                const SizedBox(height: 16),
-                _buildUpcomingAppointments(isSmallScreen),
+                _buildUpcomingAppointments(screenSize),
               ],
             ),
           ),
@@ -44,137 +43,207 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     );
   }
 
-  Widget _buildHeader(bool isSmallScreen) {
-    final avatarSize = isSmallScreen ? 40.0 : 50.0;
-
+  Widget _buildWelcomeSection() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          PopupMenuButton<String>(
-            offset: const Offset(0, 40),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Container(
-              width: avatarSize,
-              height: avatarSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: customBlue.withOpacity(0.2),
-                  width: 2,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isSmallScreen = constraints.maxWidth < 350;
+          final avatarSize = isSmallScreen ? 40.0 : 50.0;
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              PopupMenuButton<String>(
+                offset: const Offset(0, 40),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  CircleAvatar(
-                    radius: avatarSize / 2,
-                    backgroundImage: const AssetImage('lib/assets/images/Doctor Profile Picture.png'),
-                  ),
-                  Positioned(
-                    right: -4,
-                    bottom: -4,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: customBlue.withOpacity(0.2),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.arrow_drop_down,
-                        size: isSmallScreen ? 16 : 20,
-                        color: customBlue,
-                      ),
+                child: Container(
+                  width: avatarSize,
+                  height: avatarSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: customBlue.withOpacity(0.2),
+                      width: 2,
                     ),
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      CircleAvatar(
+                        radius: avatarSize / 2,
+                        backgroundImage: const AssetImage('lib/assets/images/Doctor Profile Picture.png'),
+                      ),
+                      Positioned(
+                        right: -4,
+                        bottom: -4,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: customBlue.withOpacity(0.2),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.arrow_drop_down,
+                            size: isSmallScreen ? 16 : 20,
+                            color: customBlue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                itemBuilder: (BuildContext context) => [
+                  _buildPopupMenuItem(
+                    'View Profile',
+                    Icons.person_outline,
+                    () {
+                      // Add navigation to profile screen
+                    },
+                  ),
+                  _buildPopupMenuItem(
+                    'Settings',
+                    Icons.settings_outlined,
+                    () {
+                      // Add navigation to settings screen
+                    },
+                  ),
+                  const PopupMenuDivider(),
+                  _buildPopupMenuItem(
+                    'Sign Out',
+                    Icons.logout_outlined,
+                    () {
+                      _showSignOutConfirmation(context);
+                    },
+                    isDestructive: true,
                   ),
                 ],
               ),
-            ),
-            itemBuilder: (BuildContext context) => [
-              _buildPopupMenuItem(
-                'View Profile',
-                Icons.person_outline,
-                () {
-                  // Add navigation to profile screen
-                },
+              SizedBox(width: isSmallScreen ? 8 : 12),
+              Expanded(
+                child: StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(user?.uid)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Text('Loading...');
+                    }
+                    final userData = snapshot.data?.data() as Map<String, dynamic>?;
+                    final doctorName = userData?['name'] ?? 'Doctor';
+                    
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Welcome back, Dr. $doctorName',
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 18 : 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Your patients are waiting for you',
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 14 : 16,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
-              _buildPopupMenuItem(
-                'Settings',
-                Icons.settings_outlined,
-                () {
-                  // Add navigation to settings screen
-                },
-              ),
-              const PopupMenuDivider(),
-              _buildPopupMenuItem(
-                'Sign Out',
-                Icons.logout_outlined,
-                () {
-                  _showSignOutConfirmation(context);
-                },
-                isDestructive: true,
-              ),
-            ],
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: StreamBuilder<DocumentSnapshot>(
+              StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(user?.uid)
+                    .collection('notifications')
+                    .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+                    .where('read', isEqualTo: false)
                     .snapshots(),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Text('Loading...');
-                  }
-                  final userData = snapshot.data?.data() as Map<String, dynamic>?;
-                  final doctorName = userData?['name'] ?? 'Doctor';
+                  final unreadCount = snapshot.hasData ? snapshot.data!.docs.length : 0;
                   
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  return Stack(
+                    clipBehavior: Clip.none,
                     children: [
-                      Text(
-                        'Welcome back, Dr. $doctorName',
-                        style: TextStyle(
-                          fontSize: isSmallScreen ? 18 : 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                      IconButton(
+                        icon: const Icon(Icons.notifications_outlined),
+                        iconSize: 28,
+                        color: customBlue,
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NotificationScreen(isAdmin: false),
+                            ),
+                          );
+                        },
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Your patients are waiting for you',
-                        style: TextStyle(
-                          fontSize: isSmallScreen ? 14 : 16,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w400,
+                      if (unreadCount > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 20,
+                              minHeight: 20,
+                            ),
+                            child: Text(
+                              unreadCount > 9 ? '9+' : '$unreadCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                         ),
-                      ),
                     ],
                   );
                 },
               ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -273,7 +342,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     );
   }
 
-  Widget _buildCurrentAppointment(bool isSmallScreen) {
+  Widget _buildCurrentAppointment(Size screenSize) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('appointments')
@@ -296,7 +365,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             Text(
               'Current Appointment',
               style: TextStyle(
-                fontSize: isSmallScreen ? 20 : 24,
+                fontSize: screenSize.width < 600 ? 20 : 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -307,7 +376,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                 data,
                 doc.id,
                 0,
-                isSmallScreen,
+                screenSize,
                 isCurrentAppointment: true,
               );
             }),
@@ -317,7 +386,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     );
   }
 
-  Widget _buildUpcomingAppointments(bool isSmallScreen) {
+  Widget _buildUpcomingAppointments(Size screenSize) {
     // Get start and end of current date
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day);
@@ -339,10 +408,10 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           child: Row(
             children: [
               Expanded(
-                child: _buildTabButton('Upcoming', isSmallScreen),
+                child: _buildTabButton('Upcoming', screenSize),
               ),
               Expanded(
-                child: _buildTabButton('Completed', isSmallScreen),
+                child: _buildTabButton('Completed', screenSize),
               ),
             ],
           ),
@@ -370,7 +439,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                   'No ${_selectedTab.toLowerCase()} appointments for today',
                   style: TextStyle(
                     color: Colors.grey[600],
-                    fontSize: isSmallScreen ? 14 : 16,
+                    fontSize: screenSize.width < 600 ? 14 : 16,
                   ),
                 ),
               );
@@ -407,7 +476,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                   data,
                   doc.id,
                   index,
-                  isSmallScreen,
+                  screenSize,
                   isCurrentAppointment: false,
                   isCompleted: _selectedTab == 'Completed',
                 );
@@ -419,7 +488,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     );
   }
 
-  Widget _buildTabButton(String title, bool isSmallScreen) {
+  Widget _buildTabButton(String title, Size screenSize) {
     final isSelected = _selectedTab == title;
     
     return GestureDetector(
@@ -444,7 +513,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           style: TextStyle(
             color: isSelected ? customBlue : Colors.grey,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontSize: isSmallScreen ? 16 : 18,
+            fontSize: screenSize.width < 600 ? 16 : 18,
           ),
         ),
       ),
@@ -455,7 +524,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     Map<String, dynamic> data,
     String appointmentId,
     int index,
-    bool isSmallScreen, {
+    Size screenSize, {
     bool isCurrentAppointment = false,
     bool isCompleted = false,
   }) {
@@ -538,7 +607,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                             Text(
                               data['patientName'] ?? 'Patient Name',
                               style: TextStyle(
-                                fontSize: isSmallScreen ? 16 : 18,
+                                fontSize: screenSize.width < 600 ? 16 : 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -671,7 +740,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                               Text(
                                 data['patientName'] ?? 'Patient Name',
                                 style: TextStyle(
-                                  fontSize: isSmallScreen ? 16 : 18,
+                                  fontSize: screenSize.width < 600 ? 16 : 18,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -805,7 +874,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isCurrentAppointment ? Colors.red[400] : customBlue,
                   padding: EdgeInsets.symmetric(
-                    vertical: isSmallScreen ? 12 : 16,
+                    vertical: screenSize.width < 600 ? 12 : 16,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -814,7 +883,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                 child: Text(
                   isCurrentAppointment ? 'End Appointment' : 'Start Appointment',
                   style: TextStyle(
-                    fontSize: isSmallScreen ? 16 : 18,
+                    fontSize: screenSize.width < 600 ? 16 : 18,
                     color: Colors.white,
                   ),
                 ),
