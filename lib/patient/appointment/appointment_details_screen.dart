@@ -72,14 +72,14 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
 
   Future<bool> _isAdmin() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      return userDoc.data()?['role'] == 'admin';
-    }
-    return false;
+    if (user == null) return false;
+    
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    
+    return doc.data()?['role'] == 'admin';
   }
 
   void _handleProceedToPayment(BuildContext context, AppointmentProvider provider) async {
@@ -120,6 +120,63 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
         MaterialPageRoute(builder: (context) => const PaymentMethodScreen()),
       );
     }
+  }
+
+  Widget _buildEmergencyToggle(AppointmentProvider provider, bool isSmallScreen) {
+    return FutureBuilder<bool>(
+      future: _isAdmin(),
+      builder: (context, snapshot) {
+        // Only show if user is admin and data is loaded
+        if (!snapshot.hasData || !snapshot.data!) {
+          return const SizedBox.shrink();
+        }
+
+        return Container(
+          margin: EdgeInsets.symmetric(vertical: isSmallScreen ? 16 : 24),
+          padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+          decoration: BoxDecoration(
+            color: provider.isEmergency ? Colors.red.shade50 : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: provider.isEmergency ? Colors.red.shade200 : Colors.grey.shade300,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Emergency Case',
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 16 : 18,
+                        fontWeight: FontWeight.bold,
+                        color: provider.isEmergency ? Colors.red : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Mark this as an emergency appointment',
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 14 : 16,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: provider.isEmergency,
+                onChanged: (value) => provider.setEmergency(value),
+                activeColor: Colors.red,
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -232,6 +289,7 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
                       appointmentProvider,
                       isSmallScreen,
                     ),
+                    _buildEmergencyToggle(appointmentProvider, isSmallScreen),
                     SizedBox(height: isSmallScreen ? 80 : 100),
                   ],
                 ),

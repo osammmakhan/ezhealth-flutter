@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:intl/intl.dart';
-// import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ez_health/auth.dart';
 import 'package:ez_health/doctor/doctor_appointment_details_screen.dart';
@@ -296,6 +295,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               .where('appointmentDate', 
                   isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
                   isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+              .orderBy('appointmentDate')
               .orderBy('appointmentTime')
               .snapshots(),
           builder: (context, snapshot) {
@@ -324,16 +324,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               );
             }
 
+            // Sort appointments to prioritize emergency ones
+            final sortedAppointments = List.from(appointments);
+            sortedAppointments.sort((a, b) {
+              final aData = a.data() as Map<String, dynamic>;
+              final bData = b.data() as Map<String, dynamic>;
+              
+              // First sort by emergency status
+              final aEmergency = aData['isEmergency'] ?? false;
+              final bEmergency = bData['isEmergency'] ?? false;
+              
+              if (aEmergency != bEmergency) {
+                return aEmergency ? -1 : 1;
+              }
+              
+              // Then sort by appointment time if emergency status is the same
+              final aTime = aData['appointmentTime'] as String;
+              final bTime = bData['appointmentTime'] as String;
+              return aTime.compareTo(bTime);
+            });
+
             return ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: appointments.length,
+              itemCount: sortedAppointments.length,
               itemBuilder: (context, index) {
-                final appointment = appointments[index].data() as Map<String, dynamic>;
+                final appointment = sortedAppointments[index].data() as Map<String, dynamic>;
                 final queueNumber = _selectedTab.toLowerCase() == 'confirmed' ? index + 1 : 0;
+
                 return _buildAppointmentCard(
-                  {...appointment, 'queueNumber': queueNumber},
-                  appointments[index].id,
+                  {
+                    ...appointment,
+                    'queueNumber': queueNumber,
+                    'isEmergencyBadge': appointment['isEmergency'] ?? false,
+                  },
+                  sortedAppointments[index].id,
                   isSmallScreen,
                 );
               },
@@ -409,67 +434,70 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Queue Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: customLightBlue,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          CircleAvatar(
-                            backgroundColor: customBlue,
-                            radius: 12,
-                            child: Text(
-                              data['queueNumber']?.toString() ?? '0',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Queue',
-                            style: TextStyle(
-                              color: customBlue,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 13,
+                            decoration: BoxDecoration(
+                              color: data['isEmergency'] == true ? Colors.red.shade50 : customLightBlue,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: data['isEmergency'] == true ? Colors.red : customBlue,
+                                  radius: 12,
+                                  child: Text(
+                                    data['queueNumber']?.toString() ?? '0',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  data['isEmergency'] == true ? 'Emergency' : 'Queue',
+                                  style: TextStyle(
+                                    color: data['isEmergency'] == true ? Colors.red : customBlue,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Patient Info
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundImage: const AssetImage('lib/assets/images/Patient Profile Picture.png'),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          data['patientName'] ?? 'Patient Name',
-                          style: TextStyle(
-                            fontSize: isSmallScreen ? 16 : 18,
-                            fontWeight: FontWeight.bold,
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundImage: const AssetImage('lib/assets/images/Patient Profile Picture.png'),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          const SizedBox(width: 12),
+                          Text(
+                            data['patientName'] ?? 'Patient Name',
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 16 : 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                // Time and Date
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -505,7 +533,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            // Action Buttons (keeping existing logic, just updating styling)
             if (data['status'] == 'pending') ...[
               Row(
                 children: [
@@ -609,7 +636,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               ),
             ],
-            // ... rest of the status conditions remain the same
             if (data['status'] == 'confirmed') ...[
               const SizedBox(height: 16),
               Row(
