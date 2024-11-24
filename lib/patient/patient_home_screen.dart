@@ -731,12 +731,11 @@ class _HomeScreenState extends State<HomeScreen> {
               stream: FirebaseFirestore.instance
                   .collection('appointments')
                   .where('status', isEqualTo: 'confirmed')
-                  .where('appointmentDate',
-                      isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-                  .where('appointmentDate',
+                  .where('appointmentDate', 
+                      isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
                       isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
-                  .orderBy('appointmentTime', descending: false)
-                  .limit(10)
+                  .orderBy('appointmentDate')
+                  .orderBy('appointmentTime')
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
@@ -752,7 +751,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final appointments = snapshot.data?.docs ?? [];
+                // Sort appointments to prioritize emergency ones
+                final appointments = List.from(snapshot.data?.docs ?? []);
+                appointments.sort((a, b) {
+                  final aData = a.data() as Map<String, dynamic>;
+                  final bData = b.data() as Map<String, dynamic>;
+                  
+                  // First sort by emergency status
+                  final aEmergency = aData['isEmergency'] ?? false;
+                  final bEmergency = bData['isEmergency'] ?? false;
+                  
+                  if (aEmergency != bEmergency) {
+                    return aEmergency ? -1 : 1;
+                  }
+                  
+                  // Then sort by appointment time if emergency status is the same
+                  final aTime = aData['appointmentTime'] as String;
+                  final bTime = bData['appointmentTime'] as String;
+                  return aTime.compareTo(bTime);
+                });
 
                 if (appointments.isEmpty) {
                   return const Padding(
@@ -824,9 +841,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             userId == FirebaseAuth.instance.currentUser?.uid;
 
                         return Card(
-                          color: isCurrentUser
-                              ? Colors.blue.shade50
-                              : Colors.white,
+                          color: isCurrentUser ? Colors.blue.shade50 : Colors.white,
                           elevation: isCurrentUser ? 2 : 1,
                           margin: const EdgeInsets.symmetric(
                               vertical: 6, horizontal: 16),
@@ -861,17 +876,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                     children: [
                                       Container(
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 6),
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: customBlue.withOpacity(0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
+                                          color: appointment['isEmergency'] == true 
+                                            ? Colors.red.shade50 
+                                            : customBlue.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(20),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             CircleAvatar(
-                                              backgroundColor: customBlue,
+                                              backgroundColor: appointment['isEmergency'] == true 
+                                                ? Colors.red 
+                                                : customBlue,
                                               radius: 12,
                                               child: Text(
                                                 '${index + 1}',
@@ -884,9 +904,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                             const SizedBox(width: 6),
                                             Text(
-                                              'Queue',
+                                              appointment['isEmergency'] == true 
+                                                ? 'Emergency' 
+                                                : 'Queue',
                                               style: TextStyle(
-                                                color: customBlue,
+                                                color: appointment['isEmergency'] == true 
+                                                  ? Colors.red 
+                                                  : customBlue,
                                                 fontWeight: FontWeight.w500,
                                                 fontSize: 13,
                                               ),
