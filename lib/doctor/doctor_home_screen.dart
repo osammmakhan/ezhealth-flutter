@@ -376,12 +376,32 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
               );
             }
 
+            // Sort appointments to prioritize emergency ones
+            final sortedAppointments = List.from(snapshot.data!.docs);
+            sortedAppointments.sort((a, b) {
+              final aData = a.data() as Map<String, dynamic>;
+              final bData = b.data() as Map<String, dynamic>;
+              
+              // First sort by emergency status
+              final aEmergency = aData['isEmergency'] ?? false;
+              final bEmergency = bData['isEmergency'] ?? false;
+              
+              if (aEmergency != bEmergency) {
+                return aEmergency ? -1 : 1;
+              }
+              
+              // Then sort by appointment time if emergency status is the same
+              final aTime = aData['appointmentTime'] as String;
+              final bTime = bData['appointmentTime'] as String;
+              return aTime.compareTo(bTime);
+            });
+
             return ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: snapshot.data!.docs.length,
+              itemCount: sortedAppointments.length,
               itemBuilder: (context, index) {
-                final doc = snapshot.data!.docs[index];
+                final doc = sortedAppointments[index];
                 final data = doc.data() as Map<String, dynamic>;
                 return _buildAppointmentCard(
                   data,
@@ -605,16 +625,19 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
-                              color: customLightBlue,
+                              color: data['isEmergency'] == true ? Colors.red.shade50 : customLightBlue,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 CircleAvatar(
-                                  backgroundColor: customBlue,
+                                  backgroundColor: data['isEmergency'] == true ? Colors.red : customBlue,
                                   radius: 12,
                                   child: Text(
                                     '${index + 1}',
@@ -627,9 +650,9 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  'Queue',
+                                  data['isEmergency'] == true ? 'Emergency' : 'Queue',
                                   style: TextStyle(
-                                    color: customBlue,
+                                    color: data['isEmergency'] == true ? Colors.red : customBlue,
                                     fontWeight: FontWeight.w500,
                                     fontSize: 13,
                                   ),
