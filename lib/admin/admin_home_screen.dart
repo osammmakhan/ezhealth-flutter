@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ez_health/auth.dart';
 import 'package:ez_health/doctor/doctor_appointment_details_screen.dart';
+import 'package:ez_health/patient/appointment/patient_appointment_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -204,13 +205,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             child: InkWell(
               borderRadius: BorderRadius.circular(15),
               onTap: () {
-                // TODO: Navigate to add appointment screen
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => const AddAppointmentScreen(),
-                //   ),
-                // );
+                // Navigate to PatientAppointmentScreen with admin flag
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PatientAppointmentScreen(
+                      isAdmin: true, // Add this flag to indicate admin access
+                    ),
+                  ),
+                );
               },
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
