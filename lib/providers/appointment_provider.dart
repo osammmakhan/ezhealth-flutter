@@ -18,6 +18,7 @@ class AppointmentProvider with ChangeNotifier {
   int _selectedIndex = 0;
   String _otherPersonName = '';
   bool _hasRescheduleRequest = false;
+  bool _isEmergency = false;
 
   // Getters
   bool get isLoading => _isLoading;
@@ -32,6 +33,7 @@ class AppointmentProvider with ChangeNotifier {
   int get selectedIndex => _selectedIndex;
   String get otherPersonName => _otherPersonName;
   bool get hasRescheduleRequest => _hasRescheduleRequest;
+  bool get isEmergency => _isEmergency;
 
   // Generate Appointment Number
   Future<String> _generateAppointmentNumber() async {
@@ -105,7 +107,17 @@ class AppointmentProvider with ChangeNotifier {
         'isStarted': false,
         'startedAt': null,
         'completedAt': null,
+        'isEmergency': isAdmin ? _isEmergency : false,
       });
+
+      // If admin and emergency, add to waiting list immediately
+      if (isAdmin && _isEmergency) {
+        await _firestore.collection('waitingList').add({
+          'appointmentId': _appointmentId,
+          'isEmergency': true,
+          'addedAt': FieldValue.serverTimestamp(),
+        });
+      }
 
       // Create notification only for patient appointments
       if (!isAdmin) {
@@ -425,5 +437,11 @@ class AppointmentProvider with ChangeNotifier {
     } catch (e) {
       return age.toString();
     }
+  }
+
+  // Add setter
+  void setEmergency(bool value) {
+    _isEmergency = value;
+    notifyListeners();
   }
 }
