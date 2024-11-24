@@ -5,6 +5,8 @@ import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/patient/payment/payment_method_screen.dart';
 import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
 import 'package:ez_health/providers/appointment_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AppointmentDetailsScreen extends StatefulWidget {
   const AppointmentDetailsScreen({super.key});
@@ -68,11 +70,56 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
     return true;
   }
 
-  void _handleProceedToPayment(BuildContext context, AppointmentProvider provider) {
-    // Simply navigate to payment screen
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const PaymentMethodScreen()),
-    );
+  Future<bool> _isAdmin() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      return userDoc.data()?['role'] == 'admin';
+    }
+    return false;
+  }
+
+  void _handleProceedToPayment(BuildContext context, AppointmentProvider provider) async {
+    final isAdmin = await _isAdmin();
+
+    if (isAdmin) {
+      try {
+        // Create confirmed appointment directly for admin
+        await provider.createAppointment(isAdmin: true);
+        
+        if (!context.mounted) return;
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Appointment created successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate back to AdminDashboardScreen by popping until we reach it
+        if (!context.mounted) return;
+        Navigator.of(context).popUntil((route) => route.isFirst);
+
+      } catch (e) {
+        if (!context.mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } else {
+      // Original patient flow
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => const PaymentMethodScreen()),
+      );
+    }
   }
 
   @override
@@ -145,7 +192,10 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
                         controller: _otherPersonNameController,
                         hintText: 'Enter name',
                         isSmallScreen: isSmallScreen,
-                        onChanged: (value) => setState(() {}),
+                        onChanged: (value) {
+                          appointmentProvider.setOtherPersonName(value);
+                          setState(() {});
+                        },
                       ),
                     ],
                     SizedBox(height: isSmallScreen ? 16 : 24),
@@ -196,11 +246,17 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
                 left: isSmallScreen ? 16 : 24,
                 right: isSmallScreen ? 16 : 24,
               ),
-              child: HorizontalBtn(
-                text: 'Process to Payment',
-                enabled: isFormValid,
-                onPressed: () =>
-                    _handleProceedToPayment(context, appointmentProvider),
+              child: FutureBuilder<bool>(
+                future: _isAdmin(),
+                builder: (context, snapshot) {
+                  return HorizontalBtn(
+                    text: snapshot.data == true 
+                      ? 'Create Appointment'
+                      : 'Process to Payment',
+                    enabled: isFormValid,
+                    onPressed: () => _handleProceedToPayment(context, appointmentProvider),
+                  );
+                },
               ),
             ),
           ),

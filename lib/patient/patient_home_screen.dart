@@ -387,7 +387,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       'Make Appointment',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -678,7 +678,20 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWaitingList(String currentAppointmentId) {
+  Widget _buildWaitingList(String? currentAppointmentId) {
+    // Early return if no appointment ID
+    if (currentAppointmentId == null || currentAppointmentId.isEmpty) {
+      return const Center(
+        child: Text(
+          'No active appointment found',
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey,
+          ),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -692,9 +705,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        // Get the start and end of the selected appointment date instead of current date
         StreamBuilder<DocumentSnapshot>(
-          // First get the current appointment details
           stream: FirebaseFirestore.instance
               .collection('appointments')
               .doc(currentAppointmentId)

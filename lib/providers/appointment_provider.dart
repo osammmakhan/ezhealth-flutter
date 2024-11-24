@@ -63,7 +63,7 @@ class AppointmentProvider with ChangeNotifier {
   }
 
   // Method to create initial appointment
-  Future<void> createAppointment() async {
+  Future<void> createAppointment({bool isAdmin = false}) async {
     _isLoading = true;
     notifyListeners();
 
@@ -72,40 +72,52 @@ class AppointmentProvider with ChangeNotifier {
       if (user == null) throw 'User not authenticated';
 
       final appointmentNumber = await _generateAppointmentNumber();
-
       
       final appointmentRef = _firestore.collection('appointments').doc();
       _appointmentId = appointmentRef.id;
 
+      // Get the correct patient name
+      String patientName;
+      if (_bookingFor == 'Myself') {
+        patientName = user.displayName ?? 'Unknown';
+      } else {
+        if (_otherPersonName.isEmpty) {
+          throw 'Other person name is required';
+        }
+        patientName = _otherPersonName;
+      }
+
       await appointmentRef.set({
         'appointmentNumber': appointmentNumber,
         'userId': user.uid,
-        'patientName': _bookingFor == 'Myself' ? user.displayName : _otherPersonName,
+        'patientName': patientName,
         'appointmentDate': Timestamp.fromDate(_selectedDate),
         'appointmentTime': _selectedTime,
         'bookingFor': _bookingFor,
         'gender': _gender,
         'age': _age,
         'problemDescription': _problemDescription,
-        'status': 'pending',
+        'status': isAdmin ? 'confirmed' : 'pending',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-        'paymentStatus': 'completed',
+        'paymentStatus': isAdmin ? 'cash' : 'completed',
         'paymentAmount': 500.00,
         'isStarted': false,
         'startedAt': null,
         'completedAt': null,
       });
 
-      // Create notification for admin
-      await _firestore.collection('notifications').add({
-        'userId': 'admin',
-        'type': 'new_appointment',
-        'appointmentId': _appointmentId,
-        'message': 'New appointment request: $appointmentNumber',
-        'read': false,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      // Create notification only for patient appointments
+      if (!isAdmin) {
+        await _firestore.collection('notifications').add({
+          'userId': 'admin',
+          'type': 'new_appointment',
+          'appointmentId': _appointmentId,
+          'message': 'New appointment request: $appointmentNumber',
+          'read': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
 
     } catch (e) {
       print('Error creating appointment: $e');
@@ -205,8 +217,8 @@ class AppointmentProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void setOtherPersonName(String value) {
-    _otherPersonName = value;
+  void setOtherPersonName(String name) {
+    _otherPersonName = name.trim();
     notifyListeners();
   }
 

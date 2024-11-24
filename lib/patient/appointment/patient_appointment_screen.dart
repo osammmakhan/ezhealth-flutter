@@ -12,11 +12,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class PatientAppointmentScreen extends StatefulWidget {
   final String? appointmentId;
   final bool isRescheduling;
+  final bool isAdmin;
 
   const PatientAppointmentScreen({
     super.key,
     this.appointmentId,
     this.isRescheduling = false,
+    this.isAdmin = false,
   });
 
   @override
@@ -101,7 +103,11 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          widget.isRescheduling ? 'Reschedule Appointment' : 'Book Appointment',
+          widget.isRescheduling
+              ? 'Reschedule Appointment'
+              : widget.isAdmin
+                  ? 'Add Walk-in Appointment'
+                  : 'Book Appointment',
           style: const TextStyle(color: Colors.white),
         ),
         backgroundColor: customBlue,
