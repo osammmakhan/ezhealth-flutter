@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-// import 'package:ez_health/patient/confirmation_screen.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/providers/payment_provider.dart';
-import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
+import 'package:ez_health/assets/constants/horizontal_button.dart';
 import 'package:ez_health/providers/appointment_provider.dart';
 import 'package:ez_health/patient/appointment_request_success_screen.dart';
 
@@ -313,12 +312,16 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
                   child: Consumer<AppointmentProvider>(
                     builder: (context, provider, child) {
                       return HorizontalBtn(
-                        text: provider.isLoading ? 'Processing...' : 'Pay & Confirm',
+                        text: provider.isLoading
+                            ? 'Processing...'
+                            : 'Pay & Confirm',
                         enabled: !provider.isLoading,
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
                             try {
-                              final paymentProvider = Provider.of<PaymentProvider>(context, listen: false);
+                              final paymentProvider =
+                                  Provider.of<PaymentProvider>(context,
+                                      listen: false);
 
                               // Process payment first
                               await provider.processPayment(
@@ -332,18 +335,19 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
                               await provider.createAppointment();
 
                               if (!context.mounted) return;
-                              
+
                               // Navigate to success screen
                               Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const AppointmentRequestSuccessScreen(),
+                                  builder: (context) =>
+                                      const AppointmentRequestSuccessScreen(),
                                 ),
                                 (route) => false,
                               );
                             } catch (e) {
                               if (!context.mounted) return;
-                              
+
                               // Show error message
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -352,13 +356,14 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
                                   duration: const Duration(seconds: 3),
                                 ),
                               );
-                              
+
                               // Still navigate to success screen if appointment was created
                               if (provider.appointmentId.isNotEmpty) {
                                 Navigator.pushAndRemoveUntil(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const AppointmentRequestSuccessScreen(),
+                                    builder: (context) =>
+                                        const AppointmentRequestSuccessScreen(),
                                   ),
                                   (route) => false,
                                 );
@@ -373,7 +378,6 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
               ],
             ),
           ),
-        )
-        );
+        ));
   }
 }

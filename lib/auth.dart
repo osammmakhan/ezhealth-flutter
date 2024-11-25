@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'services/firebase_service.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/patient/patient_home_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ez_health/admin/admin_home_screen.dart';
 import 'package:ez_health/doctor/doctor_home_screen.dart';
+
 
 // Sign In Screen
 class AuthScreen extends StatefulWidget {
@@ -23,38 +26,25 @@ class _AuthScreenState extends State<AuthScreen> {
     });
   }
 
-  Future<UserCredential> _handleAuth(String email, String password,
-      {String? name}) async {
+  Future<UserCredential> _handleAuth(String email, String password, {String? name}) async {
     try {
+      final firebaseService = Provider.of<FirebaseService>(context, listen: false);
       UserCredential userCredential;
+
       if (isLogin) {
-        userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email,
-          password: password,
+        userCredential = await firebaseService.signInWithEmailAndPassword(
+          email,
+          password
         );
       } else {
         // Create user with email and password
-        userCredential =
-            await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: email,
-          password: password,
+        userCredential = await firebaseService.createUserWithEmailAndPassword(
+          email,
+          password
         );
 
-        // Create user document in Firestore with default role
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userCredential.user!.uid)
-            .set({
-          'name': name ?? '',
-          'email': email,
-          'role': 'patient', // Default role for new users
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-
-        // Update user profile with name if provided
-        if (name != null) {
-          await userCredential.user?.updateDisplayName(name);
-        }
+        // Create user document using the service
+        await firebaseService.createUserDocument(userCredential.user!, name ?? '');
       }
       return userCredential;
     } catch (e) {
@@ -72,8 +62,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: Column(
               children: [
-                const SizedBox(height: 80), // Increased top spacing
-                // Header Section
+                const SizedBox(height: 80),
                 Column(
                   children: [
                     Text(
@@ -95,13 +84,13 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 60), // Increased spacing
+                const SizedBox(height: 60),
                 // Auth Form
                 AuthWidget(
                   isLogin: isLogin,
                   onSubmit: _handleAuth,
                 ),
-                const SizedBox(height: 10), // Reduced from 40 to 20
+                const SizedBox(height: 10),
                 // Toggle Auth Mode Section
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -332,13 +321,14 @@ class _AuthWidgetState extends State<AuthWidget> {
         _isLoading = true;
       });
       try {
+        final firebaseService = Provider.of<FirebaseService>(context, listen: false);
         UserCredential userCredential = await widget.onSubmit(
           _emailController.text.trim(),
           _passwordController.text.trim(),
           name: !widget.isLogin ? _nameController.text.trim() : null,
         );
 
-        // Get user role from Firestore
+        // Get user role from Firestore using the service
         final userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(userCredential.user!.uid)
@@ -356,17 +346,21 @@ class _AuthWidgetState extends State<AuthWidget> {
               duration: Duration(seconds: 3),
             ),
           );
-          // Add a small delay to allow the snackbar to be visible
+
           await Future.delayed(const Duration(milliseconds: 500));
         }
 
+        // Update last login
+        await firebaseService.updateLastLogin(userCredential.user!.uid);
+
         // Navigate based on user role
         final role = userDoc.data()?['role'] ?? 'patient';
+        if (!mounted) return;
+        
         switch (role) {
           case 'admin':
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                  builder: (context) => const AdminDashboardScreen()),
+              MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
             );
             break;
           case 'doctor':
@@ -404,6 +398,7 @@ class _AuthWidgetState extends State<AuthWidget> {
       context: context,
       builder: (BuildContext context) {
         final TextEditingController emailController = TextEditingController();
+        final firebaseService = Provider.of<FirebaseService>(context, listen: false);
 
         return AlertDialog(
           title: const Text('Forgot Password'),
@@ -429,23 +424,20 @@ class _AuthWidgetState extends State<AuthWidget> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () async {
                 if (emailController.text.isNotEmpty) {
                   try {
-                    await FirebaseAuth.instance.sendPasswordResetEmail(
-                      email: emailController.text.trim(),
+                    await firebaseService.sendPasswordResetEmail(
+                      emailController.text.trim(),
                     );
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text(
-                            'Password reset email sent. Check your inbox.'),
+                        content: Text('Password reset email sent. Check your inbox.'),
                       ),
                     );
                   } catch (e) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:ez_health/patient/patient_home_screen.dart';
-import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
+import 'package:ez_health/assets/constants/horizontal_button.dart';
 
 class AppointmentRequestSuccessScreen extends StatelessWidget {
   const AppointmentRequestSuccessScreen({super.key});
@@ -77,4 +77,4 @@ class AppointmentRequestSuccessScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}

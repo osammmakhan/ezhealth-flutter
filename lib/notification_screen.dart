@@ -6,10 +6,10 @@ import 'package:ez_health/assets/constants/constants.dart';
 
 class NotificationScreen extends StatelessWidget {
   final bool isAdmin;
-  
+
   const NotificationScreen({
     super.key,
-    this.isAdmin = false,  // Default to false for backward compatibility
+    this.isAdmin = false,
   });
 
   @override
@@ -28,7 +28,7 @@ class NotificationScreen extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        // Modify the stream to filter based on isAdmin
+        // Modifying the stream to filter based on isAdmin
         stream: FirebaseFirestore.instance
             .collection('notifications')
             .where('userId', isEqualTo: isAdmin ? 'admin' : FirebaseAuth.instance.currentUser?.uid)
@@ -123,7 +123,6 @@ class NotificationScreen extends StatelessWidget {
                     ),
                   ),
                   onTap: () {
-                    // Handle notification tap - navigate to relevant screen
                     _handleNotificationTap(context, notification);
                   },
                 ),
@@ -135,7 +134,7 @@ class NotificationScreen extends StatelessWidget {
     );
   }
 
-  // Update the notification icon logic to include admin-specific icons
+  // Updating the notification icon logic to include admin-specific icons
   Widget _buildNotificationIcon(String? type) {
     IconData icon;
     Color color;
@@ -184,7 +183,7 @@ class NotificationScreen extends StatelessWidget {
     if (timestamp == null) return 'Just now';
 
     final DateTime date = timestamp is Timestamp 
-        ? timestamp.toDate() 
+        ? timestamp.toDate()
         : DateTime.now();
     final DateTime now = DateTime.now();
     final Duration difference = now.difference(date);
@@ -202,10 +201,10 @@ class NotificationScreen extends StatelessWidget {
     }
   }
 
-  // Update the notification tap handler to handle admin-specific actions
+  // Have to update the notification tap handler
   void _handleNotificationTap(BuildContext context, Map<String, dynamic> notification) {
-    // TODO: Implement navigation based on notification type and data
+    // Implement navigation based on notification type and data
     // For example, navigate to appointment details screen if it's an appointment notification
     print('Notification tapped: ${notification['type']}');
   }
-} 
+}

@@ -45,4 +45,4 @@ class PendingConfirmationScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}

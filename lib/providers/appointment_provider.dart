@@ -1,11 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AppointmentProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  
+
+  // STATE VARIABLES
   bool _isLoading = false;
   String _appointmentId = '';
   DateTime _selectedDate = DateTime.now();
@@ -20,7 +21,7 @@ class AppointmentProvider with ChangeNotifier {
   bool _hasRescheduleRequest = false;
   bool _isEmergency = false;
 
-  // Getters
+  // GETTERS
   bool get isLoading => _isLoading;
   String get appointmentId => _appointmentId;
   DateTime get selectedDate => _selectedDate;
@@ -35,28 +36,77 @@ class AppointmentProvider with ChangeNotifier {
   bool get hasRescheduleRequest => _hasRescheduleRequest;
   bool get isEmergency => _isEmergency;
 
-  // Generate Appointment Number
+  //SETTERS
+  void setSelectedDate(DateTime date) {
+    _selectedDate = date;
+    notifyListeners();
+  }
+
+  void setSelectedTime(String time) {
+    _selectedTime = time;
+    notifyListeners();
+  }
+
+  void setBookingFor(String value) {
+    _bookingFor = value;
+    notifyListeners();
+  }
+
+  void setGender(String value) {
+    _gender = value;
+    notifyListeners();
+  }
+
+  void setAge(double value) {
+    _age = value.roundToDouble();
+    notifyListeners();
+  }
+
+  void setProblemDescription(String value) {
+    _problemDescription = value;
+    notifyListeners();
+  }
+
+  void setOtherPersonName(String name) {
+    _otherPersonName = name.trim();
+    notifyListeners();
+  }
+
+  void setSelectedIndex(int index) {
+    _selectedIndex = index;
+    notifyListeners();
+  }
+
+  void setEmergency(bool value) {
+    _isEmergency = value;
+    notifyListeners();
+  }
+
+  // Special setters
+  void setAppointmentIdSilently(String value) {
+    _appointmentId = value;
+  }
+
+  set appointmentId(String value) {
+    _appointmentId = value;
+    notifyListeners();
+  }
+
+  // APPOINTMENT CREATION & MANAGEMENT
   Future<String> _generateAppointmentNumber() async {
     final today = DateTime.now();
     final counterKey = '${today.year}${today.month.toString().padLeft(2, '0')}${today.day.toString().padLeft(2, '0')}';
     final docRef = _firestore.collection('counters').doc('appointments');
-    
+
     try {
       String number = await _firestore.runTransaction<String>((transaction) async {
         final snapshot = await transaction.get(docRef);
-        
         Map<String, dynamic> data = snapshot.exists ? snapshot.data() as Map<String, dynamic> : {};
         int currentNumber = data[counterKey] ?? 0;
-        
-        int newNumber = (currentNumber % 99) + 1; // Reset to 1 after reaching 99
-        
-        // Update the counter for today's date
+        int newNumber = (currentNumber % 99) + 1;
         transaction.set(docRef, {counterKey: newNumber}, SetOptions(merge: true));
-        
-        // Format: AP-MMDD-XX (e.g., AP-0512-01)
         return 'AP-${today.month.toString().padLeft(2, '0')}${today.day.toString().padLeft(2, '0')}-${newNumber.toString().padLeft(2, '0')}';
       });
-      
       return number;
     } catch (e) {
       print('Error generating appointment number: $e');
@@ -64,7 +114,6 @@ class AppointmentProvider with ChangeNotifier {
     }
   }
 
-  // Method to create initial appointment
   Future<void> createAppointment({bool isAdmin = false}) async {
     _isLoading = true;
     notifyListeners();
@@ -74,7 +123,7 @@ class AppointmentProvider with ChangeNotifier {
       if (user == null) throw 'User not authenticated';
 
       final appointmentNumber = await _generateAppointmentNumber();
-      
+
       final appointmentRef = _firestore.collection('appointments').doc();
       _appointmentId = appointmentRef.id;
 
@@ -152,7 +201,6 @@ class AppointmentProvider with ChangeNotifier {
     }
   }
 
-  // Method to only handle status changes
   Future<void> confirmAppointment(String appointmentId) async {
     _isLoading = true;
     notifyListeners();
@@ -208,54 +256,6 @@ class AppointmentProvider with ChangeNotifier {
     }
   }
 
-  // Setters
-  void setSelectedDate(DateTime date) {
-    _selectedDate = date;
-    notifyListeners();
-  }
-
-  void setSelectedTime(String time) {
-    _selectedTime = time;
-    notifyListeners();
-  }
-
-  void setBookingFor(String value) {
-    _bookingFor = value;
-    notifyListeners();
-  }
-
-  void setGender(String value) {
-    _gender = value;
-    notifyListeners();
-  }
-
-  void setAge(double value) {
-    _age = value.roundToDouble();
-    notifyListeners();
-  }
-
-  void setProblemDescription(String value) {
-    _problemDescription = value;
-    notifyListeners();
-  }
-
-  void resetForm() {
-    _appointmentId = '';
-    _selectedDate = DateTime.now();
-    _selectedTime = '';
-    _bookingFor = 'Myself';
-    _gender = '';
-    _age = 0;
-    _problemDescription = '';
-    notifyListeners();
-  }
-
-  void setOtherPersonName(String name) {
-    _otherPersonName = name.trim();
-    notifyListeners();
-  }
-
-  // Add this method
   Future<void> markAppointmentAsCompleted(String appointmentId) async {
     try {
       _isLoading = true;
@@ -274,7 +274,7 @@ class AppointmentProvider with ChangeNotifier {
           .collection('appointments')
           .doc(appointmentId)
           .get();
-      
+
       if (appointment.exists) {
         final patientId = appointment.data()?['userId'];
         if (patientId != null) {
@@ -298,7 +298,104 @@ class AppointmentProvider with ChangeNotifier {
     }
   }
 
-  // Initialize streams
+  Future<void> requestReschedule(String appointmentId, DateTime newDate, String newTime) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _firestore.collection('appointments').doc(appointmentId).update({
+        'status': 'pending',
+        'requestedDate': Timestamp.fromDate(newDate),
+        'requestedTime': newTime,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Create notification for admin
+      await _firestore.collection('notifications').add({
+        'userId': 'admin',
+        'type': 'reschedule_request',
+        'appointmentId': appointmentId,
+        'message': 'Patient requested to reschedule appointment',
+        'read': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+    } catch (e) {
+      print('Error requesting reschedule: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> cancelAppointment(String appointmentId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _firestore.collection('appointments').doc(appointmentId).update({
+        'status': 'cancelled',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Create notification for admin
+      await _firestore.collection('notifications').add({
+        'userId': 'admin',
+        'type': 'appointment_cancelled',
+        'appointmentId': appointmentId,
+        'message': 'Patient cancelled their appointment',
+        'read': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+    } catch (e) {
+      print('Error cancelling appointment: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // NOTIFICATION MANAGEMENT
+  Future<void> createDoctorNotification({
+    required String type,
+    required String appointmentId,
+    required Map<String, dynamic> appointmentData,
+  }) async {
+    try {
+      String message;
+      bool isPriority = false;
+
+      switch (type) {
+        case 'new_appointment_confirmed':
+          message = 'New appointment confirmed for ${appointmentData['appointmentTime']} with ${appointmentData['patientName']}';
+          break;
+        case 'emergency_appointment':
+          message = 'Emergency appointment added: ${appointmentData['patientName']}';
+          isPriority = true;
+          break;
+        default:
+          return;
+      }
+
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'userId': 'doctor',
+        'type': type,
+        'appointmentId': appointmentId,
+        'message': message,
+        'read': false,
+        'createdAt': FieldValue.serverTimestamp(),
+        if (isPriority) 'priority': 'high',
+      });
+    } catch (e) {
+      print('Error creating doctor notification: $e');
+      rethrow;
+    }
+  }
+
+  // STREAM MANAGEMENT
   void initializeStreams() {
     final user = _auth.currentUser;
     if (user != null) {
@@ -337,7 +434,7 @@ class AppointmentProvider with ChangeNotifier {
           } catch (e) {
             return false;
           }
-          return data.containsKey('requestedDate') && 
+          return data.containsKey('requestedDate') &&
                  data.containsKey('requestedTime');
         });
         notifyListeners();
@@ -345,13 +442,28 @@ class AppointmentProvider with ChangeNotifier {
     }
   }
 
-  // Set selected index
-  void setSelectedIndex(int index) {
-    _selectedIndex = index;
+  // UTILITY METHODS
+  void resetForm() {
+    _appointmentId = '';
+    _selectedDate = DateTime.now();
+    _selectedTime = '';
+    _bookingFor = 'Myself';
+    _gender = '';
+    _age = 0;
+    _problemDescription = '';
     notifyListeners();
   }
 
-  // Payment processing
+  String formatAge(dynamic age) {
+    if (age == null) return 'N/A';
+    try {
+      return double.parse(age.toString()).round().toString();
+    } catch (e) {
+      return age.toString();
+    }
+  }
+
+  // PAYMENT PROCESSING
   Future<void> processPayment({
     required String cardNumber,
     required String expiryDate,
@@ -376,130 +488,6 @@ class AppointmentProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
-    }
-  }
-
-  // Add this new method
-  Future<void> requestReschedule(String appointmentId, DateTime newDate, String newTime) async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      await _firestore.collection('appointments').doc(appointmentId).update({
-        'status': 'pending',
-        'requestedDate': Timestamp.fromDate(newDate),
-        'requestedTime': newTime,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      // Create notification for admin
-      await _firestore.collection('notifications').add({
-        'userId': 'admin',
-        'type': 'reschedule_request',
-        'appointmentId': appointmentId,
-        'message': 'Patient requested to reschedule appointment',
-        'read': false,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-    } catch (e) {
-      print('Error requesting reschedule: $e');
-      rethrow;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  void setAppointmentIdSilently(String value) {
-    _appointmentId = value;
-    // No notifyListeners() call
-  }
-
-  set appointmentId(String value) {
-    _appointmentId = value;
-    notifyListeners();
-  }
-
-  Future<void> cancelAppointment(String appointmentId) async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      await _firestore.collection('appointments').doc(appointmentId).update({
-        'status': 'cancelled',
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      // Create notification for admin
-      await _firestore.collection('notifications').add({
-        'userId': 'admin',
-        'type': 'appointment_cancelled',
-        'appointmentId': appointmentId,
-        'message': 'Patient cancelled their appointment',
-        'read': false,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-    } catch (e) {
-      print('Error cancelling appointment: $e');
-      rethrow;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  // Add this helper method
-  String formatAge(dynamic age) {
-    if (age == null) return 'N/A';
-    try {
-      return double.parse(age.toString()).round().toString();
-    } catch (e) {
-      return age.toString();
-    }
-  }
-
-  // Add setter
-  void setEmergency(bool value) {
-    _isEmergency = value;
-    notifyListeners();
-  }
-
-  // Add this method to your AppointmentProvider class
-  Future<void> createDoctorNotification({
-    required String type,
-    required String appointmentId,
-    required Map<String, dynamic> appointmentData,
-  }) async {
-    try {
-      String message;
-      bool isPriority = false;
-
-      switch (type) {
-        case 'new_appointment_confirmed':
-          message = 'New appointment confirmed for ${appointmentData['appointmentTime']} with ${appointmentData['patientName']}';
-          break;
-        case 'emergency_appointment':
-          message = 'Emergency appointment added: ${appointmentData['patientName']}';
-          isPriority = true;
-          break;
-        default:
-          return;
-      }
-
-      await FirebaseFirestore.instance.collection('notifications').add({
-        'userId': 'doctor', // Since we're using a single doctor system
-        'type': type,
-        'appointmentId': appointmentId,
-        'message': message,
-        'read': false,
-        'createdAt': FieldValue.serverTimestamp(),
-        if (isPriority) 'priority': 'high',
-      });
-    } catch (e) {
-      print('Error creating doctor notification: $e');
-      rethrow;
     }
   }
 }

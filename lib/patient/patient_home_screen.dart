@@ -6,9 +6,9 @@ import 'package:ez_health/providers/appointment_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:ez_health/patient/confirmation_screen.dart';
+import 'package:ez_health/appointment_details_screen.dart';
 import 'package:ez_health/auth.dart';
-import 'package:ez_health/patient/notification_screen.dart';
+import 'package:ez_health/notification_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -929,7 +929,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
-                                            const ConfirmationScreen(),
+                                            AppointmentDetailsScreen(
+                                                appointmentId: appointmentId,
+                                                isConfirmationScreen: true,
+                                            ),
                                       ),
                                     );
                                   }
