@@ -98,7 +98,7 @@ class FirebaseService {
     }
   }
 
-  // Add this new method for rescheduling
+  // Method for rescheduling
   Future<void> rescheduleAppointment(String appointmentId, DateTime newDate, String newTime) async {
 
     await _firestore.collection('appointments').doc(appointmentId).update({
@@ -166,6 +166,11 @@ class FirebaseService {
       'read': true,
       'readAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  // Password reset
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
   }
 }
 

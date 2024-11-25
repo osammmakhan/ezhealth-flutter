@@ -1,5 +1,5 @@
-import 'package:ez_health/assets/constants/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:ez_health/assets/constants/constants.dart';
 
 class HorizontalBtn extends StatelessWidget {
   const HorizontalBtn({
@@ -43,7 +43,7 @@ class HorizontalBtn extends StatelessWidget {
                     );
                   }
                 }
-              : null,  // Button is disabled when enabled is false
+              : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: backgroundColor ?? customBlue,
             foregroundColor: foregroundColor ?? Colors.white,
@@ -52,7 +52,6 @@ class HorizontalBtn extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             padding: const EdgeInsets.symmetric(vertical: 15),
-            // Add disabled color states
             disabledBackgroundColor: backgroundColor?.withOpacity(0.5) ??
                 customBlue.withOpacity(0.5),
             disabledForegroundColor: foregroundColor?.withOpacity(0.5) ??

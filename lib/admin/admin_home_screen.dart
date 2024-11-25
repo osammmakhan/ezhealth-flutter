@@ -4,9 +4,9 @@ import 'package:ez_health/assets/constants/constants.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ez_health/auth.dart';
-import 'package:ez_health/doctor/doctor_appointment_details_screen.dart';
+import 'package:ez_health/appointment_details_screen.dart';
 import 'package:ez_health/patient/appointment/patient_appointment_screen.dart';
-import 'package:ez_health/patient/notification_screen.dart';
+import 'package:ez_health/notification_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -490,8 +490,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => DoctorAppointmentDetailsScreen(
+              builder: (context) => AppointmentDetailsScreen(
                 appointmentId: appointmentId,
+                isConfirmationScreen: false,
               ),
             ),
           );

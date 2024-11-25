@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ez_health/assets/constants/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:ez_health/doctor/doctor_appointment_details_screen.dart';
+import 'package:ez_health/appointment_details_screen.dart';
 import 'package:ez_health/auth.dart';
 import 'package:intl/intl.dart';
-import 'package:ez_health/patient/notification_screen.dart';
+import 'package:ez_health/notification_screen.dart';
 
 class DoctorHomeScreen extends StatefulWidget {
   const DoctorHomeScreen({super.key});
@@ -548,8 +548,9 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => DoctorAppointmentDetailsScreen(
+                  builder: (context) => AppointmentDetailsScreen(
                     appointmentId: appointmentId,
+                    isConfirmationScreen: false,
                   ),
                 ),
               );
@@ -679,8 +680,9 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => DoctorAppointmentDetailsScreen(
+                    builder: (context) => AppointmentDetailsScreen(
                       appointmentId: appointmentId,
+                      isConfirmationScreen: false,
                     ),
                   ),
                 );

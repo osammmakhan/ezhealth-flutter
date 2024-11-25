@@ -16,13 +16,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Get screen size
+
     final Size screenSize = MediaQuery.of(context).size;
     final double verticalPadding = screenSize.height * 0.05;
 
     return Scaffold(
       body: SafeArea(
-        // Add SafeArea
         child: Stack(
           children: [
             PageView(
@@ -62,7 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ],
             ),
             Positioned(
-              bottom: verticalPadding, // Dynamic bottom padding
+              bottom: verticalPadding,
               left: 0,
               right: 0,
               child: DotIndicator(controller: _controller),
@@ -167,14 +166,14 @@ class Heading extends StatelessWidget {
             text: displayText1,
             style: TextStyle(
               color: textColor1,
-              fontSize: fontSize, // Dynamic font size
+              fontSize: fontSize,
               fontWeight: FontWeight.bold,
             ),
           ),
           TextSpan(
             text: displayText2,
             style: TextStyle(
-              fontSize: fontSize, // Dynamic font size
+              fontSize: fontSize,
               color: textColor2,
               fontWeight: FontWeight.bold,
             ),
@@ -205,7 +204,7 @@ class SubHeading extends StatelessWidget {
         descriptionText,
         textAlign: TextAlign.center,
         style: TextStyle(
-          fontSize: fontSize, // Dynamic font size
+          fontSize: fontSize,
         ),
       ),
     );
@@ -278,7 +277,7 @@ class _DotIndicatorState extends State<DotIndicator> {
               icon: Icons.arrow_back_ios,
               isFilled: false,
               padding: const EdgeInsets.only(
-                  left: 5), // Adjust this value between 4-6
+                  left: 5),
               onPressed: () {
                 widget._controller.previousPage(
                   duration: const Duration(milliseconds: 300),
@@ -317,14 +316,14 @@ class CustomNavigationButton extends StatelessWidget {
   final IconData icon;
   final bool isFilled;
   final VoidCallback? onPressed;
-  final EdgeInsets? padding; // Add this parameter
+  final EdgeInsets? padding;
 
   const CustomNavigationButton({
     super.key,
     required this.icon,
     required this.isFilled,
     required this.onPressed,
-    this.padding, // Add this parameter
+    this.padding,
   });
 
   @override
@@ -349,7 +348,7 @@ class CustomNavigationButton extends StatelessWidget {
         child: Center(
           child: Padding(
             padding:
-                padding ?? EdgeInsets.zero, // Apply the padding if provided
+                padding ?? EdgeInsets.zero,
             child: Icon(
               icon,
               color: isFilled ? Colors.white : customBlue,

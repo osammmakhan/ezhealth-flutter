@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:provider/provider.dart';
 import 'package:ez_health/assets/constants/constants.dart';
-import 'package:ez_health/patient/appointment/appointment_details_screen.dart';
-import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
+import 'package:ez_health/patient/appointment/patient_details_screen.dart';
+import 'package:ez_health/assets/constants/horizontal_button.dart';
 import 'package:ez_health/providers/appointment_provider.dart';
 import 'package:ez_health/patient/patient_home_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -84,10 +84,6 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
     return format.format(dateTime);
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -559,7 +555,7 @@ class _PatientAppointmentScreenState extends State<PatientAppointmentScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => const AppointmentDetailsScreen(),
+          builder: (context) => const PatientDetailsScreen(),
         ),
       );
     }

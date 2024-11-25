@@ -2,21 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:ez_health/assets/constants/constants.dart';
-import 'package:ez_health/patient/payment/payment_method_screen.dart';
-import 'package:ez_health/assets/widgets/buttons/horizontal_button.dart';
+import 'package:ez_health/patient/payment/payment_methods_screen.dart';
+import 'package:ez_health/assets/constants/horizontal_button.dart';
 import 'package:ez_health/providers/appointment_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AppointmentDetailsScreen extends StatefulWidget {
-  const AppointmentDetailsScreen({super.key});
+class PatientDetailsScreen extends StatefulWidget {
+  const PatientDetailsScreen({super.key});
 
   @override
-  State<AppointmentDetailsScreen> createState() =>
-      _AppointmentDetailsScreenState();
+  State<PatientDetailsScreen> createState() => _PatientDetailsScreenState();
 }
 
-class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
+class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   late TextEditingController _ageController;
   late TextEditingController _otherPersonNameController;
   bool _isEditing = false;
@@ -117,7 +116,7 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
     } else {
       // Original patient flow
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const PaymentMethodScreen()),
+        MaterialPageRoute(builder: (context) => const PaymentMethodsScreen()),
       );
     }
   }
