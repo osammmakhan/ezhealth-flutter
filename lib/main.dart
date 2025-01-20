@@ -4,18 +4,18 @@ import 'onboarding_screen.dart';
 import 'package:provider/provider.dart';
 import 'providers/appointment_provider.dart';
 import 'providers/payment_provider.dart';
-import 'secret.dart';
 import 'services/firebase_service.dart';
+import 'secret.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
-      options: FirebaseOptions(
-          apiKey: Secret().apiKey,
-          appId: Secret().appId,
-          messagingSenderId: Secret().messagingSenderId,
-          projectId: Secret().projectId));
+      options: const FirebaseOptions(
+          apiKey: Secret.apiKey,
+          appId: Secret.appId,
+          messagingSenderId: Secret.messagingSenderId,
+          projectId: Secret.projectId));
 
   runApp(
     MultiProvider(
