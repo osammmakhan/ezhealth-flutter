@@ -76,7 +76,6 @@ flutter:
     - lib/assets/images/onboarding-assets/Calendar Guy.svg
     - lib/assets/images/onboarding-assets/Doctor Checkup.svg
     - lib/assets/images/onboarding-assets/Medical Team.svg
-    - lib/assets/images/sociallogin-assets/
     - lib/assets/images/paymentmethod-assets/
 
   # An image asset can refer to one or more resolution-specific "variants", see
