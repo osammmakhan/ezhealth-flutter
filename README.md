@@ -31,7 +31,11 @@ EzHealth is a comprehensive solution addressing inefficiencies in Pakistan's hea
 
 ## Demo 🎥
 
-[Click here to watch the demo video](lib/assets/ezHealth%20Demo.mp4)
+Watch the app in action below:
+
+<video src="lib/assets/ezHealth Demo.mp4" controls width="600">
+Your browser does not support the video tag.
+</video>
 
 ### Key Objectives:
 - 🔒 Replace time-consuming paper-based processes with a user-friendly digital platform.
