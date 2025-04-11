@@ -29,14 +29,13 @@ A modern Flutter-based project for managing healthcare appointments, designed to
 
 EzHealth is a comprehensive solution addressing inefficiencies in Pakistan's healthcare system caused by outdated appointment scheduling methods. It provides seamless communication between patients, doctors, and administrative staff, offering features like real-time updates, emergency prioritization, and support for both digital and manual booking.
 
+![ezhealth](https://github.com/user-attachments/assets/d1742173-bbc2-4d5e-be64-702af700bcc0)
+
 ## Demo 🎥
 
 Watch the app in action below:
 
-
 https://github.com/user-attachments/assets/130797ec-f8e9-419f-80fa-9ca35952e1c7
-
-
 
 ### Key Objectives:
 - 🔒 Replace time-consuming paper-based processes with a user-friendly digital platform.
